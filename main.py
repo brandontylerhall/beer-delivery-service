@@ -11,8 +11,6 @@ def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-# TODO add a dictionary of room descriptions
-
 # TODO add a dictionary of item descriptions
 #  e.g. 'fridge': 'dad said to get something from there'
 
@@ -25,13 +23,17 @@ containers = {
 
 rooms = {
     'living room': {
+        'description': 'You\'re in your living room. Your DAD is on the couch watching Fox News.'
+                       ' The KITCHEN is to your LEFT and your ROOM is to the RIGHT.',
         'left': 'kitchen',
         'right': 'bedroom',
         'npc': 'dad',
         'item': 'ice cold beer'
+
     },
 
     'kitchen': {
+        'description': 'In the kitchen, you can smell dad cooking some nugs. Around you is the FRIDGE.',
         'right': 'living room',
         'container': 'fridge',
     },
@@ -59,10 +61,14 @@ current_room = 'living room'
 
 # List of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
-
-print(current_room)
+previous_room = current_room
+print(rooms[current_room]['description'])
 
 while True:
+    if current_room != previous_room:
+        print(rooms[current_room]['description'])
+        previous_room = current_room
+
     user_in = input('> ')
 
     # split input on the first whitespace to separate the verb and the remaining input
