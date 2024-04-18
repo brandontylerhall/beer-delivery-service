@@ -12,7 +12,7 @@ def clear():
 
 
 containers = {
-    'fridge': {'locked': 'no', 'item': 'ice cold beer'}
+    'fridge': {'open': 'no', 'locked': 'no', 'item': 'ice cold beer'}
 }
 
 # Map
@@ -26,28 +26,35 @@ rooms = {
 inventory = []
 
 # Tracks current room
-current_room = 'kitchen'
+current_room = 'living room'
 
 # List of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
 
 prompt()
-print(containers)
-print(rooms)
+
+# user input, split into 2 parts
 user_in = input('> ')
 user_move = user_in.split(' ')
 
+# 1st half of the input
 verb = user_move[0].lower()
 
+# 2nd half of the input
 noun = user_move[1].lower()
 
+# TODO need to add a try/except for if there is no container in the room
 if verb == 'open':
+    # if the room has a container in it and that container matches the input
     if 'container' in rooms[current_room].keys() and rooms[current_room]['container'] == noun:
+        container_open = containers[noun]['open']
         container_locked = containers[noun]['locked']
-        if container_locked == 'no':
-            print(f'You open the {noun}')
-            rooms[current_room]['item'] = 'ice cold beer'
-            # Goes through rooms{} and checks to see if there are any items
+        # if the container is both unlocked and unopened, it will do the following
+        if container_locked == 'no' and container_open == 'no':
+            # container is now set to open
+            containers[noun]['open'] = 'yes'
+            rooms[current_room]['item'] = containers[noun]['item']
+            # goes through rooms{} and checks to see if there are any items
             if 'item' in rooms[current_room].keys():
                 nearby_item = rooms[current_room]['item']
                 # if the last character of the item is an 's' (as in a plural item)
@@ -60,4 +67,7 @@ if verb == 'open':
                 else:
                     print(f'You open the {noun} and see a {nearby_item}')
         elif container_locked == 'yes':
-            print(f'The {noun} is locked')
+            print(f'The {noun} is locked. Maybe I should find a key...')
+        elif container_open == 'yes':
+            print(f'The {noun} is already open, dumb dumb')
+
