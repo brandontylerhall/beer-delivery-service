@@ -67,9 +67,9 @@ verb = user_move[0].lower()
 noun = user_move[1].lower()
 
 # TODO need to add a try/except for if there is no container in the room
-if verb == 'open':
+if verb.lower() == 'open':
     # if the room has a container in it and that container matches the input
-    if 'container' in rooms[current_room].keys() and rooms[current_room]['container'] == noun:
+    if 'container' in rooms[current_room].keys() and rooms[current_room]['container'] == noun.lower():
         container_open = containers[noun]['open']
         container_locked = containers[noun]['locked']
         # if the container is both unlocked and unopened, it will do the following
@@ -93,3 +93,35 @@ if verb == 'open':
             print(f'The {noun} is locked. Maybe I should find a key...')
         elif container_open == 'yes':
             print(f'The {noun} is already open, dumb dumb')
+
+if verb.lower() == 'talk':
+    # goes through rooms, checks to see if there's any npc's and checks if the input is a valid npc
+    if 'npc' in rooms[current_room].keys() and rooms[current_room]['npc'] == noun.lower():
+        # gets the npc's dialogue
+        npc_name = rooms[current_room]['npc']
+        npc = dialogue.get(npc_name)
+
+        if npc:
+            print(npc['greeting'])
+
+            print('Choose a question to ask')
+
+            # prints the dialogue menu in a numbered list
+            for index, question in enumerate(npc['questions'].keys(), start=1):
+                print(f'[{index}] {question}')
+            print('[9] Exit')
+
+            while True:
+                try:
+                    choice_index = int(input('> '))
+                    if choice_index == 9:
+                        break
+                    if 1 <= choice_index <= len(npc['questions']):
+                        question_key = list(npc['questions'].keys())[choice_index - 1]
+                        print(npc['questions'][question_key])
+                    else:
+                        print('Invalid choice. Enter a number from the menu above.')
+                except ValueError:
+                    print("Invalid input. Please enter a number from the menu.")
+    else:
+        print(f"There's no one here to talk to named {noun.capitalize()}")
