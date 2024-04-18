@@ -12,14 +12,37 @@ def clear():
 
 
 containers = {
-    'fridge': {'open': 'no', 'locked': 'no', 'item': 'ice cold beer'}
+    'fridge': {
+        'open': 'no',
+        'locked': 'no',
+        'item': 'ice cold beer'}
 }
 
-# Map
 rooms = {
-    'living room': {'left': 'kitchen', 'right': 'bedroom', 'npc': 'dad'},
-    'kitchen': {'right': 'living room', 'container': 'fridge'},
+    'living room': {
+        'left': 'kitchen',
+        'right': 'bedroom',
+        'npc': 'dad'
+    },
+
+    'kitchen': {
+        'right': 'living room',
+        'container': 'fridge'
+    },
+
     'bedroom': {'left': 'living room'}
+}
+
+dialogue = {
+    'dad': {
+        'greeting': 'Hey son, can you fetch me that beer in the FRIDGE? '
+                    'It\'s next to the leftovers. I\'m absolutely parched.',
+        'questions': {
+            'How are you': 'I\'m good, just relaxing here.',
+            'What are you doing?': 'Just watching TV and enjoying my evening.',
+            'Got any advice?': 'Always be kind and thoughtful to others.'
+        }
+    }
 }
 
 # List to track inventory
@@ -70,4 +93,3 @@ if verb == 'open':
             print(f'The {noun} is locked. Maybe I should find a key...')
         elif container_open == 'yes':
             print(f'The {noun} is already open, dumb dumb')
-
