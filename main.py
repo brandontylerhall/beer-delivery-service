@@ -19,6 +19,9 @@ def prompt():
     clear()
 
 
+# def sleepy_time(rooms, condition):
+
+
 def handle_help():
     print('Commands:\n'
           'CLEAR -- Clear screen\n'
@@ -135,18 +138,21 @@ def handle_take(noun, current_room, rooms, inventory):
         print(f'You look around and you don\'t see one of those.')
 
 
-def handle_give(noun, current_room, rooms, inventory, npcs):
-    # flag that determines if a successful give has happened
+def handle_give(noun, current_room, rooms, game_state, npcs):
+    # If noun is empty, prompt the user for an item
     successful_give = False
+    inventory = game_state['inventory']
 
     if noun == "":
         if inventory:
-            print(f'Inventory: {", ".join(inventory)}')
             while not successful_give:
-                print("What do you want to give? ")
+                print("What do you want to give?")
+                print(f'Inventory: {", ".join(inventory)}')
                 item = input("> ").lower()
-                if inventory.count(item) > 0:
-                    inventory.pop(inventory.index(item))
+                if item == 'back':
+                    break
+                elif item in inventory:
+                    inventory.remove(item)
                     while True:
                         print(f"Who do you want to give the {item} to?")
                         next_noun = input('> ').lower()
@@ -154,13 +160,15 @@ def handle_give(noun, current_room, rooms, inventory, npcs):
                             npc_name = rooms[current_room]['npc']
                             npc = npcs.get(npc_name)
 
-                            # checks if the item is required by the npc
+                            # Check if the item is required by the NPC
                             if npc and item in npcs[npc_name]['required_items']:
-                                npcs[npc_name]['item_delivered'] = True
+                                print(f"You gave {npc_name.capitalize()} the {item}")
+                                # Update the game state when the beer is delivered
+                                game_state['beer_delivered'] = True
                                 successful_give = True
                                 break
                         else:
-                            print(f"{next_noun.capitalize()} isn't here to give {item} to")
+                            print(f"{next_noun.capitalize()} isn't here to give {item} to.")
                 else:
                     print(f"You don't have {item}.")
         else:
@@ -171,8 +179,21 @@ def handle_look_around(current_room, rooms):
     print(rooms[current_room]['description'])
 
 
-def handle_look_obj(current_room, rooms):
-    print()
+def handle_look_obj(noun, current_room, rooms, game_state):
+    try:
+        # Use the game_state dictionary to check if the beer has been delivered
+        if noun in rooms[current_room]['object']:
+            if noun == 'bed':
+                # Check if beer has been delivered using the game_state dictionary
+                if not game_state['beer_delivered']:
+                    print('The bed looks mad comfy but it isn\'t time for sleep yet! '
+                          'I still need to get dad his beer.')
+                else:
+                    print(rooms[current_room]['object'][noun])
+            else:
+                print(rooms[current_room]['object'][noun])
+    except KeyError:
+        print(f"I don't see a {noun} to look at.")
 
 
 def handle_inventory(inventory):
@@ -184,6 +205,12 @@ def handle_inventory(inventory):
 
 
 #################################################################################################
+
+game_state = {
+    'beer_delivered': False,
+    'inventory': ['ice cold beer'],
+    'current_room': 'living_room'
+}
 
 containers = {
     'fridge': {
@@ -202,21 +229,29 @@ npcs = {
 
 rooms = {
     'living_room': {
-        'description': 'You\'re in your living room. Your DAD is on the couch watching Fox News.\n'
-                       'The KITCHEN is to your LEFT and your ROOM is to the RIGHT.',
+        'description': 'You\'re in your living room. Your DAD is on the couch watching TV.\n'
+                       'The kitchen is to your LEFT and your room is to the RIGHT.',
         'left': 'kitchen',
         'right': 'bedroom',
         'npc': 'dad',
-        'item': 'ice cold beer'
+        'item': 'ice cold beer',
+        'object': {
+            'around': 'There\'s probably half a case of empty Miller Light cans '
+                      'on the ottoman and another 3 on the table next to Dad.',
+            'dad': 'He looks pretty hammered.',
+            'tv': 'Dad\'s watching Tucker Carlson\'s podcast. His favorite.'
+        }
     },
 
     'kitchen': {
-        'description': 'In the kitchen, you can smell dad cooking some chicken fried rice. '
+        'description': 'In the kitchen, you can smell something cooking on the STOVE. '
                        'Around you is the FRIDGE.',
         'right': 'living_room',
         'container': 'fridge',
         'object': {
-            'fridge': 'I think dad said something getting him something from here.'
+            'around': 'The fridge is slightly ajar, probably from when dad went to get his last beer.',
+            'stove': 'You look inside the pots and pans and it looks like a shrimp is frying some rice.',
+            'fridge': 'I think dad said something about getting him something out of here.'
         }
     },
 
@@ -224,7 +259,8 @@ rooms = {
         'left': 'living_room',
         'description': 'Your room is pretty tidy. You see your BED. It looks pretty damn comfy.',
         'object': {
-            'bed', 'I could really go for a rest about now.'
+            'around': 'You have RuneScape posters and Star Wars legos hanging on your wall... Sick.',
+            'bed': 'I could really go for a rest about now.'
         }
     }
 }
@@ -244,10 +280,10 @@ dialogue = {
 #################################################################################################
 
 # List to track inventory
-inventory = ['ice cold beer']
+inventory = ['ice cold beer', 'garbage']
 
 # Tracks current room
-current_room = 'living_room'
+current_room = game_state['current_room']
 
 # List of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
@@ -260,6 +296,7 @@ print(rooms[current_room]['description'])
 
 # gameplay loop
 while True:
+    beer_delivered = False
     # this prevents the room descript from printing after every action
     if current_room != previous_room:
         clear()
@@ -298,7 +335,7 @@ while True:
         handle_take(noun, current_room, rooms, inventory)
 
     if verb.lower() == 'give':
-        handle_give(noun, current_room, rooms, inventory, npcs)
+        handle_give(noun, current_room, rooms, game_state, npcs)
 
     if verb.lower() == 'go':
         handle_go(noun, current_room, rooms)
@@ -307,10 +344,10 @@ while True:
         handle_inventory(inventory)
 
     if verb.lower() == 'look':
-        if noun == '' or noun == 'around':
+        if noun == '':
             handle_look_around(current_room, rooms)
         else:
-            handle_look_obj(current_room, rooms)
+            handle_look_obj(noun, current_room, rooms, game_state)
 
     if verb.lower() == 'help':
         handle_help()
