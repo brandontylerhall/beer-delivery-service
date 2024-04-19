@@ -21,6 +21,7 @@ def instructions():
     print('Commands:\n'
           'GO (DIRECTION)- Go a direction\n'
           'TAKE (ITEM) -- Take an item\n'
+          'GIVE (ITEM) -- Give an item\n'
           'LOOK (OBJECT)-- Look around, look an an object, etc\n'
           'TALK (PERSON) -- Talk to someone\n'
           'INVENTORY -- Shows what you\'re carrying')
@@ -103,8 +104,12 @@ def handle_talk(noun, current_room, rooms, dialogue):
                 print('[9] Exit\n')
                 try:
                     choice_index = int(input('> '))
+                    # if they choose 9, it clears the console, prints the description, and breaks the loop
                     if choice_index == 9:
+                        clear()
+                        print(rooms[current_room]['description'])
                         break
+                    # if they choose an actual option, it prints the value of the key
                     if 1 <= choice_index <= len(npc['questions']):
                         question_key = list(npc['questions'].keys())[choice_index - 1]
                         print(f'{npc['questions'][question_key]}\n')
@@ -149,8 +154,6 @@ def handle_give(noun, current_room, rooms, inventory, npcs):
                             # checks if the item is required by the npc
                             if npc and item in npcs[npc_name]['required_items']:
                                 npcs[npc_name]['item_delivered'] = True
-                                # TODO delete this when testing is no longer necessary
-                                print(f"You gave the {item} to {npc_name.capitalize()}.")
                                 successful_give = True
                                 break
                         else:
