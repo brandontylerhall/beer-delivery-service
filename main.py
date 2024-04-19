@@ -3,6 +3,8 @@ import os
 import time
 
 
+#################################################################################################
+
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -17,14 +19,15 @@ def prompt():
     clear()
 
 
-def instructions():
+def handle_help():
     print('Commands:\n'
+          'CLEAR -- Clear screen\n'
+          'GIVE -- Give an item\n'
           'GO (DIRECTION)- Go a direction\n'
-          'TAKE (ITEM) -- Take an item\n'
-          'GIVE (ITEM) -- Give an item\n'
+          'INVENTORY -- Shows what you\'re carrying\n'
           'LOOK (OBJECT)-- Look around, look an an object, etc\n'
-          'TALK (PERSON) -- Talk to someone\n'
-          'INVENTORY -- Shows what you\'re carrying')
+          'TAKE (ITEM) -- Take an item\n'
+          'TALK (PERSON) -- Talk to someone')
 
 
 def handle_open(noun, current_room, rooms, containers, vowels):
@@ -164,9 +167,12 @@ def handle_give(noun, current_room, rooms, inventory, npcs):
             print("You don't have any items to give.")
 
 
-# TODO finish this
-# def handle_look(current_room, rooms):
-#     print()
+def handle_look_around(current_room, rooms):
+    print(rooms[current_room]['description'])
+
+
+def handle_look_obj(current_room, rooms):
+    print()
 
 
 def handle_inventory(inventory):
@@ -177,7 +183,7 @@ def handle_inventory(inventory):
         print(f'Inventory: {", ".join(inventory)}')
 
 
-# object_descriptions = {}
+#################################################################################################
 
 containers = {
     'fridge': {
@@ -195,7 +201,7 @@ npcs = {
 }
 
 rooms = {
-    'living room': {
+    'living_room': {
         'description': 'You\'re in your living room. Your DAD is on the couch watching Fox News.\n'
                        'The KITCHEN is to your LEFT and your ROOM is to the RIGHT.',
         'left': 'kitchen',
@@ -207,15 +213,19 @@ rooms = {
     'kitchen': {
         'description': 'In the kitchen, you can smell dad cooking some chicken fried rice. '
                        'Around you is the FRIDGE.',
-        'right': 'living room',
+        'right': 'living_room',
         'container': 'fridge',
-        'object': 'fridge'
+        'object': {
+            'fridge': 'I think dad said something getting him something from here.'
+        }
     },
 
     'bedroom': {
-        'left': 'living room',
+        'left': 'living_room',
         'description': 'Your room is pretty tidy. You see your BED. It looks pretty damn comfy.',
-        'object': 'bed'
+        'object': {
+            'bed', 'I could really go for a rest about now.'
+        }
     }
 }
 
@@ -231,11 +241,13 @@ dialogue = {
     }
 }
 
+#################################################################################################
+
 # List to track inventory
 inventory = ['ice cold beer']
 
 # Tracks current room
-current_room = 'living room'
+current_room = 'living_room'
 
 # List of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
@@ -244,7 +256,11 @@ prompt()
 previous_room = current_room
 print(rooms[current_room]['description'])
 
+#################################################################################################
+
+# gameplay loop
 while True:
+    # this prevents the room descript from printing after every action
     if current_room != previous_room:
         clear()
         print(rooms[current_room]['description'])
@@ -290,5 +306,14 @@ while True:
     if verb.lower() == 'inventory':
         handle_inventory(inventory)
 
-    if verb.lower() == 'instructions':
-        instructions()
+    if verb.lower() == 'look':
+        if noun == '' or noun == 'around':
+            handle_look_around(current_room, rooms)
+        else:
+            handle_look_obj(current_room, rooms)
+
+    if verb.lower() == 'help':
+        handle_help()
+
+    if verb.lower() == 'clear':
+        clear()
