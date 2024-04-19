@@ -1,14 +1,24 @@
 # Display title screen
 import os
-
-
-def prompt():
-    print("----------------Welcome to Simple Game \U0001F642 Nice to have you----------------")
-    print()
+import time
 
 
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
+
+
+def prompt():
+    print("----------------Welcome to Simple Game \U0001F642 Nice to have you----------------\n\n"
+          "Pay attention to the words in all CAPS.\n\n"
+          "If you end up getting stuck, you can type 'instructions' to learn various "
+          "commands that may be useful.\n\n"
+          "Have fun and good luck (it ain't hard... yet)!")
+    # time.sleep(8)
+    clear()
+
+
+def instructions():
+    print('Commands:\nGO - You go, TAKE, LOOK, INVENTORY, TALK')
 
 
 def handle_open(noun, current_room, rooms, containers, vowels):
@@ -38,7 +48,23 @@ def handle_open(noun, current_room, rooms, containers, vowels):
         elif container_locked == 'yes':
             print(f'The {noun} is locked. Maybe I should find a key...')
         elif container_open == 'yes':
-            print(f'The {noun} is already open, dumb dumb')
+            print(f'The {noun} is already open, dumb dumb.')
+    else:
+        print(f'You don\'t see a {noun} to open.')
+
+
+def handle_close(noun, current_room, rooms, containers):
+    if noun == "":
+        print("You need to be more specific.")
+    # if the room has a container in it and that container matches the input
+    elif 'container' in rooms[current_room].keys() and rooms[current_room]['container'] == noun.lower():
+        container_open = containers[noun]['open']
+        container_locked = containers[noun]['locked']
+        # if the container is both unlocked and unopened, it will do the following
+        if container_open == 'yes':
+            containers[noun]['open'] = 'yes'
+            del rooms[current_room]['item']
+            print(f'You close the {noun}')
     else:
         print(f'You don\'t see a {noun} to open.')
 
@@ -50,7 +76,6 @@ def handle_go(noun, currentRoom, rooms):
         print("You need to be more specific.")
     elif noun in rooms[currentRoom].keys():
         current_room = rooms[current_room][noun]
-        print(f'You moved to the {current_room}')
     else:
         print('I can\'t go that way.')
 
@@ -124,8 +149,8 @@ containers = {
 
 rooms = {
     'living room': {
-        'description': 'You\'re in your living room. Your DAD is on the couch watching Fox News.'
-                       ' The KITCHEN is to your LEFT and your ROOM is to the RIGHT.',
+        'description': 'You\'re in your living room. Your DAD is on the couch watching Fox News.\n'
+                       'The KITCHEN is to your LEFT and your ROOM is to the RIGHT.',
         'left': 'kitchen',
         'right': 'bedroom',
         'npc': 'dad',
@@ -168,11 +193,14 @@ current_room = 'living room'
 
 # List of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
+
+prompt()
 previous_room = current_room
 print(rooms[current_room]['description'])
 
 while True:
     if current_room != previous_room:
+        clear()
         print(rooms[current_room]['description'])
         previous_room = current_room
 
@@ -198,6 +226,9 @@ while True:
     if verb.lower() == 'open':
         handle_open(noun, current_room, rooms, containers, vowels)
 
+    elif verb.lower() == 'close':
+        handle_close(noun, current_room, rooms, containers)
+
     if verb.lower() == 'talk':
         handle_talk(noun, current_room, rooms, dialogue)
 
@@ -209,3 +240,6 @@ while True:
 
     if verb.lower() == 'inventory':
         handle_inventory(inventory)
+
+    if verb.lower() == 'instructions':
+        instructions()
