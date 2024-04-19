@@ -19,9 +19,6 @@ def prompt():
     clear()
 
 
-# def sleepy_time(rooms, condition):
-
-
 def handle_help():
     print('Commands:\n'
           'CLEAR -- Clear screen\n'
@@ -127,7 +124,9 @@ def handle_talk(noun, current_room, rooms, dialogue):
         print(f"There's no one here to talk to named {noun.capitalize()}.")
 
 
-def handle_take(noun, current_room, rooms, inventory):
+def handle_take(noun, current_room, rooms, game_state):
+    inventory = game_state['inventory']
+
     if noun == "":
         print("You need to be more specific.")
     elif 'item' in rooms[current_room].keys() and rooms[current_room]['item'] == noun.lower():
@@ -139,12 +138,14 @@ def handle_take(noun, current_room, rooms, inventory):
 
 
 def handle_give(noun, current_room, rooms, game_state, npcs):
-    # If noun is empty, prompt the user for an item
     successful_give = False
     inventory = game_state['inventory']
 
+    # If noun is empty, prompt the user for an item
     if noun == "":
         if inventory:
+            print("You don't have any items to give.")
+        else:
             while not successful_give:
                 print("What do you want to give?")
                 print(f'Inventory: {", ".join(inventory)}')
@@ -171,8 +172,6 @@ def handle_give(noun, current_room, rooms, game_state, npcs):
                             print(f"{next_noun.capitalize()} isn't here to give {item} to.")
                 else:
                     print(f"You don't have {item}.")
-        else:
-            print("You don't have any items to give.")
 
 
 def handle_look_around(current_room, rooms):
@@ -196,19 +195,33 @@ def handle_look_obj(noun, current_room, rooms, game_state):
         print(f"I don't see a {noun} to look at.")
 
 
-def handle_inventory(inventory):
+def handle_inventory(game_state):
+    inventory = game_state['inventory']
+
     # checks if inventory is empty
-    if not inventory:
+    if inventory:
         print('You aren\'t carrying anything.')
     else:
         print(f'Inventory: {", ".join(inventory)}')
+
+
+def handle_use(noun, current_room, rooms, game_state):
+    if noun in rooms[current_room]['object']:
+        if game_state['beer_delivered']:
+            print('You rest your weary, beer-delivering eyes. '
+                  'You wake up the next day, ready for whatever may lie ahead.\n\n'
+                  'GAME OVER')
+            time.sleep(10)
+            exit()
+        else:
+            print('It isn\'t sleep time yet, dad need his beer!')
 
 
 #################################################################################################
 
 game_state = {
     'beer_delivered': False,
-    'inventory': ['ice cold beer'],
+    'inventory': [''],
     'current_room': 'living_room'
 }
 
@@ -279,13 +292,10 @@ dialogue = {
 
 #################################################################################################
 
-# List to track inventory
-inventory = ['ice cold beer', 'garbage']
-
-# Tracks current room
+# tracks current room
 current_room = game_state['current_room']
 
-# List of vowels
+# list of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
 
 prompt()
@@ -321,36 +331,30 @@ while True:
     if verb.lower() == 'exit':
         print("Exiting the game. Goodbye!")
         break
-
-    if verb.lower() == 'open':
+    elif verb.lower() == 'open':
         handle_open(noun, current_room, rooms, containers, vowels)
-
-    if verb.lower() == 'close':
+    elif verb.lower() == 'close':
         handle_close(noun, current_room, rooms, containers)
-
-    if verb.lower() == 'talk':
+    elif verb.lower() == 'talk':
         handle_talk(noun, current_room, rooms, dialogue)
-
-    if verb.lower() == 'take':
-        handle_take(noun, current_room, rooms, inventory)
-
-    if verb.lower() == 'give':
+    elif verb.lower() == 'take':
+        handle_take(noun, current_room, rooms, game_state)
+    elif verb.lower() == 'give':
         handle_give(noun, current_room, rooms, game_state, npcs)
-
-    if verb.lower() == 'go':
+    elif verb.lower() == 'go':
         handle_go(noun, current_room, rooms)
-
-    if verb.lower() == 'inventory':
-        handle_inventory(inventory)
-
-    if verb.lower() == 'look':
+    elif verb.lower() == 'inventory':
+        handle_inventory(game_state)
+    elif verb.lower() == 'look':
         if noun == '':
             handle_look_around(current_room, rooms)
         else:
             handle_look_obj(noun, current_room, rooms, game_state)
-
-    if verb.lower() == 'help':
+    elif verb.lower() == 'use':
+        handle_use(noun, current_room, rooms, game_state)
+    elif verb.lower() == 'help':
         handle_help()
-
-    if verb.lower() == 'clear':
+    elif verb.lower() == 'clear':
         clear()
+    else:
+        print("I don't understand what you want me to do.")
