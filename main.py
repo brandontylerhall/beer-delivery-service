@@ -40,7 +40,7 @@ def handle_open(noun, current_room, rooms, containers, vowels):
         elif container_open == 'yes':
             print(f'The {noun} is already open, dumb dumb')
     else:
-        print(f'Couldn\'t find {noun}')
+        print(f'You don\'t see a {noun} to open.')
 
 
 def handle_go(noun, currentRoom, rooms):
@@ -67,7 +67,7 @@ def handle_talk(noun, current_room, rooms, dialogue):
         if npc:
             print(npc['greeting'])
 
-            print('Choose a question to ask')
+            print('Choose a question to ask:')
 
             # prints the dialogue menu in a numbered list
             for index, question in enumerate(npc['questions'].keys(), start=1):
@@ -85,9 +85,9 @@ def handle_talk(noun, current_room, rooms, dialogue):
                     else:
                         print('Invalid choice. Enter a number from the menu above.')
                 except ValueError:
-                    print("Invalid input. Please enter a number from the menu.")
+                    print("Invalid input. Please enter a number from the menu above.")
     else:
-        print(f"There's no one here to talk to named {noun.capitalize()}")
+        print(f"There's no one here to talk to named {noun.capitalize()}.")
 
 
 def handle_take(noun, current_room, rooms, inventory):
@@ -95,15 +95,23 @@ def handle_take(noun, current_room, rooms, inventory):
         print("You need to be more specific.")
     elif 'item' in rooms[current_room].keys() and rooms[current_room]['item'] == noun.lower():
         inventory.append(rooms[current_room]['item'])
-        print(f'You take the {noun}')
+        print(f'You take the {noun}.')
         del rooms[current_room]['item']
     else:
-        print(f'You look around and you don\'t see one of those')
+        print(f'You look around and you don\'t see one of those.')
 
 
-# def handle_look():
+# def handle_look(current_room, rooms):
+#     print()
 
-# def handle_inventory():
+
+def handle_inventory(inventory):
+    # checks if inventory is empty
+    if not inventory:
+        print('You aren\'t carrying anything.')
+    else:
+        print(f'Inventory: {inventory}')
+
 
 # object_descriptions = {}
 
@@ -198,3 +206,6 @@ while True:
 
     if verb.lower() == 'go':
         handle_go(noun, current_room, rooms)
+
+    if verb.lower() == 'inventory':
+        handle_inventory(inventory)
