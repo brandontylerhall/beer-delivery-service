@@ -94,23 +94,20 @@ def handle_talk(noun, current_room, rooms, dialogue):
         npc = dialogue.get(npc_name)
 
         if npc:
-            print(npc['greeting'])
-
-            print('Choose a question to ask:')
-
-            # prints the dialogue menu in a numbered list
-            for index, question in enumerate(npc['questions'].keys(), start=1):
-                print(f'[{index}] {question}')
-            print('[9] Exit')
+            print(f'\n{npc['greeting']}')
 
             while True:
+                # prints the dialogue menu in a numbered list
+                for index, question in enumerate(npc['questions'].keys(), start=1):
+                    print(f'[{index}] {question}')
+                print('[9] Exit\n')
                 try:
                     choice_index = int(input('> '))
                     if choice_index == 9:
                         break
                     if 1 <= choice_index <= len(npc['questions']):
                         question_key = list(npc['questions'].keys())[choice_index - 1]
-                        print(npc['questions'][question_key])
+                        print(f'{npc['questions'][question_key]}\n')
                     else:
                         print('Invalid choice. Enter a number from the menu above.')
                 except ValueError:
@@ -130,6 +127,41 @@ def handle_take(noun, current_room, rooms, inventory):
         print(f'You look around and you don\'t see one of those.')
 
 
+def handle_give(noun, current_room, rooms, inventory, npcs):
+    # flag that determines if a successful give has happened
+    successful_give = False
+
+    if noun == "":
+        if inventory:
+            print(f'Inventory: {", ".join(inventory)}')
+            while not successful_give:
+                print("What do you want to give? ")
+                item = input("> ").lower()
+                if inventory.count(item) > 0:
+                    inventory.pop(inventory.index(item))
+                    while True:
+                        print(f"Who do you want to give the {item} to?")
+                        next_noun = input('> ').lower()
+                        if 'npc' in rooms[current_room].keys() and rooms[current_room]['npc'] == next_noun:
+                            npc_name = rooms[current_room]['npc']
+                            npc = npcs.get(npc_name)
+
+                            # checks if the item is required by the npc
+                            if npc and item in npcs[npc_name]['required_items']:
+                                npcs[npc_name]['item_delivered'] = True
+                                # TODO delete this when testing is no longer necessary
+                                print(f"You gave the {item} to {npc_name.capitalize()}.")
+                                successful_give = True
+                                break
+                        else:
+                            print(f"{next_noun.capitalize()} isn't here to give {item} to")
+                else:
+                    print(f"You don't have {item}.")
+        else:
+            print("You don't have any items to give.")
+
+
+# TODO finish this
 # def handle_look(current_room, rooms):
 #     print()
 
@@ -151,6 +183,14 @@ containers = {
         'item': 'ice cold beer'}
 }
 
+# list of npcs to handle if they have their proper quest items
+npcs = {
+    'dad': {
+        'required_items': ['ice cold beer'],
+        'item_delivered': False
+    }
+}
+
 rooms = {
     'living room': {
         'description': 'You\'re in your living room. Your DAD is on the couch watching Fox News.\n'
@@ -159,7 +199,6 @@ rooms = {
         'right': 'bedroom',
         'npc': 'dad',
         'item': 'ice cold beer'
-
     },
 
     'kitchen': {
@@ -184,13 +223,13 @@ dialogue = {
         'questions': {
             'How are you': 'I\'m good, just relaxing here.',
             'What are you doing?': 'Just watching TV and enjoying my evening.',
-            'Got any advice?': 'Always be kind and thoughtful to others.'
+            'Do you need anything?': 'I would love that BEER I just mentioned, yeah.'
         }
     }
 }
 
 # List to track inventory
-inventory = []
+inventory = ['ice cold beer']
 
 # Tracks current room
 current_room = 'living room'
@@ -230,7 +269,7 @@ while True:
     if verb.lower() == 'open':
         handle_open(noun, current_room, rooms, containers, vowels)
 
-    elif verb.lower() == 'close':
+    if verb.lower() == 'close':
         handle_close(noun, current_room, rooms, containers)
 
     if verb.lower() == 'talk':
@@ -238,6 +277,9 @@ while True:
 
     if verb.lower() == 'take':
         handle_take(noun, current_room, rooms, inventory)
+
+    if verb.lower() == 'give':
+        handle_give(noun, current_room, rooms, inventory, npcs)
 
     if verb.lower() == 'go':
         handle_go(noun, current_room, rooms)
