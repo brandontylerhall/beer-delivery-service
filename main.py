@@ -18,7 +18,12 @@ def prompt():
 
 
 def instructions():
-    print('Commands:\nGO - You go, TAKE, LOOK, INVENTORY, TALK')
+    print('Commands:\n'
+          'GO (DIRECTION)- Go a direction\n'
+          'TAKE (ITEM) -- Take an item\n'
+          'LOOK (OBJECT)-- Look around, look an an object, etc\n'
+          'TALK (PERSON) -- Talk to someone\n'
+          'INVENTORY -- Shows what you\'re carrying')
 
 
 def handle_open(noun, current_room, rooms, containers, vowels):
@@ -59,10 +64,9 @@ def handle_close(noun, current_room, rooms, containers):
     # if the room has a container in it and that container matches the input
     elif 'container' in rooms[current_room].keys() and rooms[current_room]['container'] == noun.lower():
         container_open = containers[noun]['open']
-        container_locked = containers[noun]['locked']
         # if the container is both unlocked and unopened, it will do the following
         if container_open == 'yes':
-            containers[noun]['open'] = 'yes'
+            containers[noun]['open'] = 'no'
             del rooms[current_room]['item']
             print(f'You close the {noun}')
     else:
@@ -135,7 +139,7 @@ def handle_inventory(inventory):
     if not inventory:
         print('You aren\'t carrying anything.')
     else:
-        print(f'Inventory: {inventory}')
+        print(f'Inventory: {", ".join(inventory)}')
 
 
 # object_descriptions = {}
@@ -214,8 +218,8 @@ while True:
         verb, noun = split_input
         verb = verb.lower()
         noun = noun.lower()
+    # if there's no whitespace in the input, the user might have only entered a verb
     else:
-        # if there's no whitespace in the input, the user might have only entered a verb
         verb = user_in.strip().lower()
         noun = ""
 
