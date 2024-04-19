@@ -10,9 +10,9 @@ def clear():
 
 
 def prompt():
-    print("----------------Welcome to Simple Game \U0001F642 Nice to have you----------------\n\n"
+    print("---------------- Welcome to Beer Delivery Service \U0001F642 Nice to have you ----------------\n\n"
           "Pay attention to the words in all CAPS.\n\n"
-          "If you end up getting stuck, you can type 'instructions' to learn various "
+          "If you end up getting stuck, you can type 'help' to learn various "
           "commands that may be useful.\n\n"
           "Have fun and good luck (it ain't hard... yet)!")
     # time.sleep(8)
