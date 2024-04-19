@@ -23,10 +23,11 @@ def handle_help():
     print('Commands:\n'
           'CLEAR -- Clear screen\n'
           'GIVE -- Give an item\n'
-          'GO (DIRECTION)- Go a direction\n'
+          'GO (DIRECTION) -- Go a direction\n'
           'INVENTORY -- Shows what you\'re carrying\n'
-          'LOOK (OBJECT)-- Look around, look an an object, etc\n'
+          'LOOK (OBJECT) -- Look around, look an an object, etc\n'
           'TAKE (ITEM) -- Take an item\n'
+          'USE (OBJECT) -- Use an object\n'
           'TALK (PERSON) -- Talk to someone')
 
 
@@ -47,13 +48,13 @@ def handle_open(noun, current_room, rooms, containers, vowels):
                 nearby_item = rooms[current_room]['item']
                 # if the last character of the item is an 's' (as in a plural item)
                 if nearby_item[-1] == 's':
-                    print(f'You open the {noun} and find {nearby_item}')
+                    print(f'You open the {noun} and find {nearby_item.upper()}')
                 # else if the first letter of the item is a vowel
                 elif nearby_item[0] in vowels:
-                    print(f'You open the {noun} and see an {nearby_item}')
+                    print(f'You open the {noun} and see an {nearby_item.upper()}')
                 # else if the item is singular and starts with a consonant
                 else:
-                    print(f'You open the {noun} and see a {nearby_item}')
+                    print(f'You open the {noun} and see a {nearby_item.upper()}')
         elif container_locked == 'yes':
             print(f'The {noun} is locked. Maybe I should find a key...')
         elif container_open == 'yes':
@@ -71,8 +72,10 @@ def handle_close(noun, current_room, rooms, containers):
         # if the container is both unlocked and unopened, it will do the following
         if container_open == 'yes':
             containers[noun]['open'] = 'no'
-            del rooms[current_room]['item']
-            print(f'You close the {noun}')
+            try:
+                del rooms[current_room]['item']
+            except KeyError:
+                print(f'You close the {noun}')
     else:
         print(f'You don\'t see a {noun} to open.')
 
@@ -137,13 +140,15 @@ def handle_take(noun, current_room, rooms, game_state):
         print(f'You look around and you don\'t see one of those.')
 
 
-def handle_give(noun, current_room, rooms, game_state, npcs):
+def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
     successful_give = False
     inventory = game_state['inventory']
+    npc_name = rooms[current_room]['npc']
+    npc = dialogue.get(npc_name)
 
     # If noun is empty, prompt the user for an item
     if noun == "":
-        if inventory:
+        if not inventory:
             print("You don't have any items to give.")
         else:
             while not successful_give:
@@ -163,10 +168,17 @@ def handle_give(noun, current_room, rooms, game_state, npcs):
 
                             # Check if the item is required by the NPC
                             if npc and item in npcs[npc_name]['required_items']:
-                                print(f"You gave {npc_name.capitalize()} the {item}")
-                                # Update the game state when the beer is delivered
+                                # update the game state when the beer is delivered
                                 game_state['beer_delivered'] = True
+                                # updates the flag so the loop can break
                                 successful_give = True
+                                # quest success dialogue
+                                print(dialogue[npc_name]['response'])
+                                # clears the terminal after 3-second delay
+                                time.sleep(3)
+                                clear()
+                                # prompt to go to bed
+                                print('Boy I sure am beat from all that gathering. Time to go to bed.')
                                 break
                         else:
                             print(f"{next_noun.capitalize()} isn't here to give {item} to.")
@@ -199,7 +211,7 @@ def handle_inventory(game_state):
     inventory = game_state['inventory']
 
     # checks if inventory is empty
-    if inventory:
+    if not inventory:
         print('You aren\'t carrying anything.')
     else:
         print(f'Inventory: {", ".join(inventory)}')
@@ -221,7 +233,7 @@ def handle_use(noun, current_room, rooms, game_state):
 
 game_state = {
     'beer_delivered': False,
-    'inventory': [''],
+    'inventory': [],
     'current_room': 'living_room'
 }
 
@@ -282,6 +294,7 @@ dialogue = {
     'dad': {
         'greeting': 'Hey son, can you fetch me that beer in the FRIDGE? '
                     'It\'s next to the leftovers. I\'m absolutely parched.',
+        'response': 'Thanks son, I always liked you the best.',
         'questions': {
             'How are you': 'I\'m good, just relaxing here.',
             'What are you doing?': 'Just watching TV and enjoying my evening.',
@@ -340,7 +353,7 @@ while True:
     elif verb.lower() == 'take':
         handle_take(noun, current_room, rooms, game_state)
     elif verb.lower() == 'give':
-        handle_give(noun, current_room, rooms, game_state, npcs)
+        handle_give(noun, current_room, rooms, game_state, npcs, dialogue)
     elif verb.lower() == 'go':
         handle_go(noun, current_room, rooms)
     elif verb.lower() == 'inventory':
