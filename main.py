@@ -15,7 +15,7 @@ def prompt():
           "If you end up getting stuck, you can type 'help' to learn various "
           "commands that may be useful.\n\n"
           "Have fun and good luck (it ain't hard... yet)!")
-    # time.sleep(8)
+    time.sleep(8)
     clear()
 
 
