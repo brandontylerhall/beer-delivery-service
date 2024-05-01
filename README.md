@@ -27,4 +27,4 @@ Really not going for anything grandiose. I really just want to be able to have t
 * Add more rooms (front yard, back yard, Dad's mancave, etc.)
 * Add new characters (Mom, all-knowing cat named Bernard, etc.)
 * Add more items (Dad's cigar, wet cat food, etc.)
-* Change Dad's dialogue (it kinda sucks)
+* Change Dad's dialogue (it kinda sucks) -- ✅
