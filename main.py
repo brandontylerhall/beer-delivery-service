@@ -1,5 +1,6 @@
 import os
 import time
+from PIL import Image
 
 
 #################################################################################################
@@ -26,6 +27,7 @@ def handle_help():
           'GO (DIRECTION/ROOM NAME) -- Go a direction\n'
           'INVENTORY -- Shows what you\'re carrying\n'
           'LOOK (OBJECT/DIRECTION) -- Look around, look at an object, etc\n'
+          'MAP -- Shows the map\n'
           'TAKE (ITEM) -- Take an item\n'
           'TALK (PERSON) -- Talk to someone\n'
           'USE (OBJECT) -- Use an object')
@@ -92,10 +94,12 @@ def handle_go(noun, currentRoom, rooms):
         for key, value in rooms[currentRoom].items():
             if isinstance(key, tuple) and noun in key:
                 current_room = value
+                game_state["current_room"] = current_room
                 return
         # if there is no tuple, it sets the current room like before
         if noun in rooms[currentRoom].keys():
             current_room = rooms[currentRoom][noun]
+            game_state["current_room"] = current_room
         else:
             print('I can\'t go that way.')
 
@@ -238,6 +242,16 @@ def handle_use(noun, current_room, rooms, game_state):
             print('It isn\'t sleep time yet, dad need his beer!')
     else:
         print('Nothing interesting happens.')
+
+
+def handle_map():
+    folder_path = "map_files"  # Specify the folder path where the map images are located
+    image_path = os.path.join(folder_path, f'{current_room}.jpg')
+    try:
+        Image.open(image_path).show()
+        print('Pulling out the map.')
+    except FileNotFoundError:
+        print(f"Map image for {current_room} not found.")
 
 
 #################################################################################################
@@ -420,5 +434,7 @@ while True:
         handle_help()
     elif verb.lower() == 'clear':
         clear()
+    elif verb.lower() == 'map':
+        handle_map()
     else:
         print("I don't understand what you want me to do.")
