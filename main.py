@@ -22,10 +22,10 @@ def clear():
 def handle_help():
     print('Commands:\n'
           'CLEAR -- Clear screen\n'
-          'GIVE -- Give an item\n'
-          'GO (DIRECTION) -- Go a direction\n'
+          'GIVE -- Opens a menu to give an item to someone\n'
+          'GO (DIRECTION/ROOM NAME) -- Go a direction\n'
           'INVENTORY -- Shows what you\'re carrying\n'
-          'LOOK (OBJECT) -- Look around, look at an object, etc\n'
+          'LOOK (OBJECT/DIRECTION) -- Look around, look at an object, etc\n'
           'TAKE (ITEM) -- Take an item\n'
           'TALK (PERSON) -- Talk to someone\n'
           'USE (OBJECT) -- Use an object')
@@ -236,6 +236,8 @@ def handle_use(noun, current_room, rooms, game_state):
             exit()
         else:
             print('It isn\'t sleep time yet, dad need his beer!')
+    else:
+        print('Nothing interesting happens.')
 
 
 #################################################################################################
@@ -243,7 +245,7 @@ def handle_use(noun, current_room, rooms, game_state):
 game_state = {
     'beer_delivered': False,
     'inventory': [],
-    'current_room': 'living_room'
+    'current_room': 'living room'
 }
 
 containers = {
@@ -262,11 +264,13 @@ npcs = {
 }
 
 rooms = {
-    'living_room': {
+    'living room': {
         'description': 'You\'re in your living room. Your DAD is on the couch watching TV.\n'
-                       'The kitchen is to your LEFT and your room is to the RIGHT.',
-        'left': 'kitchen',
-        'right': 'bedroom',
+                       'The KITCHEN is to your LEFT and your BEDROOM is to the RIGHT. '
+                       'BEHIND you is the door going out to the FRONT YARD',
+        ('back', 'behind', 'front yard'): 'front yard',
+        ('left', 'kitchen'): 'kitchen',
+        ('right', 'bedroom'): 'bedroom',
         'npc': 'dad',
         'item': 'beer',
         'object': {
@@ -279,22 +283,60 @@ rooms = {
 
     'kitchen': {
         'description': 'In the kitchen, you can smell something cooking on the STOVE. '
-                       'Around you is the FRIDGE.',
-        'right': 'living_room',
+                       'Around you is the FRIDGE. '
+                       'STRAIGHT ahead leads the the BACK YARD and the LIVING ROOM is to the RIGHT.',
+        ('right', 'living room'): 'living room',
+        ('straight', 'forward', 'back yard'): 'back yard',
         'container': 'fridge',
         'object': {
             'around': 'The fridge is slightly ajar, probably from when dad went to get his last beer.',
             'stove': 'You look inside the pots and pans and it looks like a shrimp is frying some rice.',
-            'fridge': 'I think dad said something about getting him something out of here.'
+            'fridge': 'I think Dad said something about getting him something out of here.'
         }
     },
 
     'bedroom': {
-        'left': 'living_room',
         'description': 'Your room is pretty tidy. You see your BED. It looks pretty damn comfy.',
+        ('left', 'living room'): 'living room',
         'object': {
             'around': 'You have RuneScape posters and Star Wars legos hanging on your wall... Sick.',
             'bed': 'I could really go for a rest about now.'
+        }
+    },
+
+    'front yard': {
+        'description': 'Out in the front yard, you see MOM diligently doing yard work. '
+                       'She is tending to her GARDEN, watering the FLOWERS.',
+        ('back', 'behind', 'living room'): 'living room',
+        'npc': 'mom',
+        'object': {
+            'around': '',
+            'mom': '',
+            'garden': '',
+            'flowers': '',
+        }
+    },
+
+    'back yard': {
+        'description': 'Out back, this is where you and BERNARD like to play. '
+                       'You look about and see BERNARD in the DOGHOUSE and you also see the SHED.',
+        ('back', 'behind', 'kitchen'): 'kitchen',
+        'shed': 'shed',
+        'npc': 'bernard',
+        'object': {
+            'around': '',
+            'doghouse': '',
+            'shed': '',
+            'flowers': '',
+        }
+    },
+
+    'shed': {
+        'description': '',
+        ('back', 'behind', 'back yard'): 'back yard',
+        'item': '',
+        'object': {
+            'around': '',
         }
     }
 }
