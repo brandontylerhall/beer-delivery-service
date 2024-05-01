@@ -9,14 +9,14 @@ def clear():
 
 
 # Display title screen
-def prompt():
-    print("---------------- Welcome to Beer Delivery Service \U0001F642 Nice to have you ----------------\n\n"
-          "Pay attention to the words in all CAPS.\n\n"
-          "If you end up getting stuck, you can type 'help' to learn various "
-          "commands that may be useful.\n\n"
-          "Have fun and good luck (it ain't hard... yet)!")
-    time.sleep(8)
-    clear()
+# def prompt():
+#     print("---------------- Welcome to Beer Delivery Service \U0001F642 Nice to have you ----------------\n\n"
+#           "Pay attention to the words in all CAPS.\n\n"
+#           "If you end up getting stuck, you can type 'help' to learn various "
+#           "commands that may be useful.\n\n"
+#           "Have fun and good luck (it ain't hard... yet)!")
+#     time.sleep(8)
+#     clear()
 
 
 def handle_help():
@@ -85,10 +85,19 @@ def handle_go(noun, currentRoom, rooms):
     global current_room
     if noun == '':
         print("You need to be more specific.")
-    elif noun in rooms[currentRoom].keys():
-        current_room = rooms[current_room][noun]
     else:
-        print('I can\'t go that way.')
+        # iterates through the keys of rooms and checks for tuples using isinstance()
+        # e.g. ('left', 'west'): 'kitchen'
+        # if there is a tuple, then it sets the current_room to the value of that tuple
+        for key, value in rooms[currentRoom].items():
+            if isinstance(key, tuple) and noun in key:
+                current_room = value
+                return
+        # if there is no tuple, it sets the current room like before
+        if noun in rooms[currentRoom].keys():
+            current_room = rooms[currentRoom][noun]
+        else:
+            print('I can\'t go that way.')
 
 
 def handle_talk(noun, current_room, rooms, dialogue):
@@ -241,13 +250,13 @@ containers = {
     'fridge': {
         'open': 'no',
         'locked': 'no',
-        'item': 'ice cold beer'}
+        'item': 'beer'}
 }
 
 # list of npcs to handle if they have their proper quest items
 npcs = {
     'dad': {
-        'required_items': ['ice cold beer'],
+        'required_items': ['beer'],
         'item_delivered': False
     }
 }
@@ -259,7 +268,7 @@ rooms = {
         'left': 'kitchen',
         'right': 'bedroom',
         'npc': 'dad',
-        'item': 'ice cold beer',
+        'item': 'beer',
         'object': {
             'around': 'There\'s probably half a case of empty Miller Light cans '
                       'on the ottoman and another 3 on the table next to Dad.',
@@ -311,7 +320,7 @@ current_room = game_state['current_room']
 # list of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
 
-prompt()
+# prompt()
 previous_room = current_room
 print(rooms[current_room]["description"])
 
