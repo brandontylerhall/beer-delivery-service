@@ -301,13 +301,13 @@ rooms = {
 
 dialogue = {
     'dad': {
-        'greeting': 'Hey son, can you fetch me that beer in the FRIDGE? '
+        'greeting': 'Hey son, can you fetch me that BEER in the FRIDGE? '
                     'It\'s next to the leftovers. I\'m absolutely parched.',
         'response': 'Thanks son, I always liked you the best.',
         'questions': {
-            'How are you': 'I\'m good, just relaxing here.',
-            'What are you doing?': 'Just watching TV and enjoying my evening.',
-            'Do you need anything?': 'I would love that BEER I just mentioned, yeah.'
+            'How are you': 'I\'m great. Just watching Tuck and drinking my Millers. What else could I ask for?',
+            'What are you doing?': 'Just kicking back. I still have the whole day ahead of me.',
+            'Do you need anything?': 'Yeah, actually. I would love that BEER I just mentioned if you wouldn\'t mind.'
         }
     }
 }
