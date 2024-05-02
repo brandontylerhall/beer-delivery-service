@@ -10,6 +10,7 @@ def clear():
 
 
 # Display title screen
+# TODO uncomment when done testing
 # def prompt():
 #     print("---------------- Welcome to Beer Delivery Service \U0001F642 Nice to have you ----------------\n\n"
 #           "Pay attention to the words in all CAPS.\n\n"
@@ -50,7 +51,7 @@ def handle_open(noun, current_room, rooms, containers, vowels):
                 nearby_item = rooms[current_room]["item"]
                 # if the last character of the item is an 's' (as in a plural item)
                 if nearby_item[-1] == 's':
-                    print(f'You open the {noun} and find {nearby_item.upper()}')
+                    print(f'You open the {noun} and see {nearby_item.upper()}')
                 # else if the first letter of the item is a vowel
                 elif nearby_item[0] in vowels:
                     print(f'You open the {noun} and see an {nearby_item.upper()}')
@@ -79,7 +80,7 @@ def handle_close(noun, current_room, rooms, containers):
             except KeyError:
                 print(f'You close the {noun}')
     else:
-        print(f'You don\'t see a {noun} to open.')
+        print(f'You don\'t see a {noun} to close.')
 
 
 def handle_go(noun, currentRoom, rooms):
@@ -153,6 +154,37 @@ def handle_take(noun, current_room, rooms, game_state):
         print(f'You look around and you don\'t see one of those.')
 
 
+def handle_use(noun, current_room, rooms, containers, game_state):
+    inventory = game_state["inventory"]
+
+    if noun == "bed":
+        if game_state["beer_delivered"]:
+            print('You rest your weary, beer-delivering eyes. '
+                  'You wake up the next day, ready for whatever may lie ahead.\n\n'
+                  'GAME OVER')
+            time.sleep(10)
+            exit()
+        else:
+            print('It isn\'t sleepy time yet, dad need his beer!')
+    elif noun == "cigar key":
+        if noun in inventory:
+            print("What do you want to use the key on?")
+            use_key_on = input("> ").lower()
+            if use_key_on == 'cigar case':
+                if use_key_on in rooms[current_room]["object"]:
+                    inventory.remove(noun)
+                    containers[use_key_on]["locked"] = "no"
+                    print(f"You unlocked the {use_key_on}.")
+                else:
+                    print(f"There is no {use_key_on} to use that on.")
+            else:
+                print(f"That key doesn't open {use_key_on}")
+        else:
+            print("You don't have a cigar key.")
+    else:
+        print('Nothing interesting happens.')
+
+
 def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
     successful_give = False
     inventory = game_state["inventory"]
@@ -186,7 +218,7 @@ def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
                                 # updates the flag so the loop can break
                                 successful_give = True
                                 # quest success dialogue
-                                print(dialogue[npc_name]['response'])
+                                print(dialogue[npc_name]['give_response'])
                                 # clears the terminal after 3-second delay
                                 time.sleep(3)
                                 clear()
@@ -230,23 +262,9 @@ def handle_inventory(game_state):
         print(f'Inventory: {", ".join(inventory)}')
 
 
-def handle_use(noun, current_room, rooms, game_state):
-    if noun in rooms[current_room]["object"]:
-        if game_state["beer_delivered"]:
-            print('You rest your weary, beer-delivering eyes. '
-                  'You wake up the next day, ready for whatever may lie ahead.\n\n'
-                  'GAME OVER')
-            time.sleep(10)
-            exit()
-        else:
-            print('It isn\'t sleep time yet, dad need his beer!')
-    else:
-        print('Nothing interesting happens.')
-
-
 def handle_map():
     folder_path = "map_files"  # Specify the folder path where the map images are located
-    image_path = os.path.join(folder_path, f'{current_room}.jpg')
+    image_path = os.path.join(folder_path, f'{current_room}.png')
     try:
         Image.open(image_path).show()
         print('Pulling out the map.')
@@ -266,7 +284,13 @@ containers = {
     'fridge': {
         'open': 'no',
         'locked': 'no',
-        'item': 'beer'}
+        'item': 'beer'
+    },
+    'cigar case': {
+        'open': 'no',
+        'locked': 'yes',
+        'item': 'cigar'
+    }
 }
 
 # list of npcs to handle if they have their proper quest items
@@ -274,17 +298,22 @@ npcs = {
     'dad': {
         'required_items': ['beer'],
         'item_delivered': False
+    },
+    ####################################################
+    'bernard': {
+        'required_items': ['dog food'],
+        'item_delivered': False
     }
 }
 
 rooms = {
     'living room': {
-        'description': 'You\'re in your living room. Your DAD is on the couch watching TV.\n'
-                       'The KITCHEN is to your LEFT and your BEDROOM is to the RIGHT. '
+        'description': 'You\'re in your living room. DAD is on the couch watching TV.\n'
+                       'The KITCHEN is to your LEFT and the HALLWAY is to the RIGHT. '
                        'BEHIND you is the door going out to the FRONT YARD',
         ('back', 'behind', 'front yard'): 'front yard',
         ('left', 'kitchen'): 'kitchen',
-        ('right', 'bedroom'): 'bedroom',
+        ('right', 'hallway'): 'hallway',
         'npc': 'dad',
         'item': 'beer',
         'object': {
@@ -294,13 +323,55 @@ rooms = {
             'tv': 'Dad\'s watching Tucker Carlson\'s podcast. His favorite.'
         }
     },
-
+    ####################################################
+    'hallway': {
+        'description': 'You stop in the hallway, contemplating if you want to go '
+                       'LEFT, to your BEDROOM, or RIGHT, to the STUDY. A hard choice, you know.',
+        ('left', 'bedroom'): 'bedroom',
+        ('right', 'study'): 'study',
+        ('back', 'behind', 'living room'): 'living room',
+        'object': {
+            'around': '',
+            'bedroom': '',
+            'study': '',
+        }
+    },
+    ####################################################
+    'study': {
+        'description': 'You enter Dad\'s study. Around you is a DESK where Dad reads his books, '
+                       'a few SHELVES where he keeps those books, and a MINI-FRIDGE where he keeps his '
+                       'more expensive alcohol.',
+        ('back', 'behind', 'hallway'): 'hallway',
+        'container': 'cigar case',
+        'object': {
+            'around': 'Dad\'s study. I don\'t know what he studies, but what I do know is that '
+                      'I\'m not usually allowed in here. This time, however, duty calls.',
+            'desk': 'On Dad\'s desk you see the story he is currently reading, "The Beast in the Cave." '
+                    'You also see some sort of BOX',
+            'box': 'You read the lid of the box. "Fine Blend Cigars." This must be Dad\'s CIGAR CASE.',
+            'mini-fridge': '',
+            'shelf': '',
+            'shelves': '',
+            'cigar case': ''
+        },
+    },
+    ####################################################
+    'bedroom': {
+        'description': 'Your room is pretty tidy. You see your BED. It looks pretty damn comfy.',
+        ('left', 'living room'): 'living room',
+        ('back', 'behind', 'hallway'): 'hallway',
+        'object': {
+            'around': 'You have RuneScape posters and Star Wars legos hanging on your wall... Sick.',
+            'bed': 'I could really go for a rest about now.'
+        }
+    },
+    ####################################################
     'kitchen': {
         'description': 'In the kitchen, you can smell something cooking on the STOVE. '
                        'Around you is the FRIDGE. '
-                       'STRAIGHT ahead leads the the BACK YARD and the LIVING ROOM is to the RIGHT.',
+                       'STRAIGHT ahead leads the the BACKYARD and the LIVING ROOM is to the RIGHT.',
         ('right', 'living room'): 'living room',
-        ('straight', 'forward', 'back yard'): 'back yard',
+        ('straight', 'forward', 'backyard'): 'backyard',
         'container': 'fridge',
         'object': {
             'around': 'The fridge is slightly ajar, probably from when dad went to get his last beer.',
@@ -308,30 +379,21 @@ rooms = {
             'fridge': 'I think Dad said something about getting him something out of here.'
         }
     },
-
-    'bedroom': {
-        'description': 'Your room is pretty tidy. You see your BED. It looks pretty damn comfy.',
-        ('left', 'living room'): 'living room',
-        'object': {
-            'around': 'You have RuneScape posters and Star Wars legos hanging on your wall... Sick.',
-            'bed': 'I could really go for a rest about now.'
-        }
-    },
-
+    ####################################################
     'front yard': {
         'description': 'Out in the front yard, you see MOM diligently doing yard work. '
                        'She is tending to her GARDEN, watering the FLOWERS.',
         ('back', 'behind', 'living room'): 'living room',
         'npc': 'mom',
         'object': {
-            'around': '',
+            'around': 'Mom\'s flowers make the front yard really ',
             'mom': '',
             'garden': '',
             'flowers': '',
         }
     },
-
-    'back yard': {
+    ####################################################
+    'backyard': {
         'description': 'Out back, this is where you and BERNARD like to play. '
                        'You look about and see BERNARD in the DOGHOUSE and you also see the SHED.',
         ('back', 'behind', 'kitchen'): 'kitchen',
@@ -344,13 +406,15 @@ rooms = {
             'flowers': '',
         }
     },
-
+    ####################################################
     'shed': {
         'description': '',
-        ('back', 'behind', 'back yard'): 'back yard',
-        'item': '',
+        ('back', 'behind', 'backyard'): 'backyard',
         'object': {
             'around': '',
+            'obj1': '',
+            'obj2': '',
+            'obj3': '',
         }
     }
 }
@@ -359,13 +423,29 @@ dialogue = {
     'dad': {
         'greeting': 'Hey son, can you fetch me that BEER in the FRIDGE? '
                     'It\'s next to the leftovers. I\'m absolutely parched.',
-        'response': 'Thanks son, I always liked you the best.',
+        'give_response': 'Thanks son, I always liked you the best.',
         'questions': {
-            'How are you': 'I\'m great. Just watching Tuck and drinking my Millers. What else could I ask for?',
+            'How are you?': 'I\'m great. Just watching Tuck and drinking my Millers. What else could I ask for?',
             'What are you doing?': 'Just kicking back. I still have the whole day ahead of me.',
             'Do you need anything?': 'Yeah, actually. I would love that BEER I just mentioned if you wouldn\'t mind.'
         }
-    }
+    },
+    ####################################################
+    'mom': {
+        'greeting': '',
+        'questions': {
+            'What are you doing?': '',
+            'Do you need anything?': '',
+        }
+    },
+    ####################################################
+    'bernard': {
+        'greeting': '',
+        'questions': {
+            'What are you doing?': '',
+            'Do you need anything?': '',
+        }
+    },
 }
 
 #################################################################################################
@@ -376,6 +456,7 @@ current_room = game_state['current_room']
 # list of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
 
+# TODO uncomment when done testing
 # prompt()
 previous_room = current_room
 print(rooms[current_room]["description"])
@@ -429,7 +510,7 @@ while True:
         else:
             handle_look_obj(noun, current_room, rooms, game_state)
     elif verb.lower() == 'use':
-        handle_use(noun, current_room, rooms, game_state)
+        handle_use(noun, current_room, rooms, containers, game_state)
     elif verb.lower() == 'help':
         handle_help()
     elif verb.lower() == 'clear':
