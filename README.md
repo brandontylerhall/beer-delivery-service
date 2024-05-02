@@ -28,3 +28,4 @@ Really not going for anything grandiose. I really just want to be able to have t
 * Add new characters (Mom, all-knowing cat named Bernard, etc.)
 * Add more items (Dad's cigar, wet cat food, etc.)
 * Change Dad's dialogue (it kinda sucks) -- ✅
+* Add a map that shows what room the player currently is in -- ✅
