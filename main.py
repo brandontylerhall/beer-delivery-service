@@ -77,8 +77,9 @@ def handle_close(noun, current_room, rooms, containers):
             containers[noun]["open"] = 'no'
             try:
                 del rooms[current_room]["item"]
-            except KeyError:
                 print(f'You close the {noun}')
+            except KeyError:
+                print(f'You don\'t see a {noun} to close.')
     else:
         print(f'You don\'t see a {noun} to close.')
 
