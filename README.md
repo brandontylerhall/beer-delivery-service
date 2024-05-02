@@ -10,7 +10,7 @@ I have wanted to make my own text-adventure game for some time now. I originally
 
 <hr style="border:1px solid gray">
 
-# v1.0
+# v1.0 (as of 11 Jan 24)
 
 ## MECHANICS
 * Give -- 🟩
@@ -32,7 +32,7 @@ I have wanted to make my own text-adventure game for some time now. I originally
 
 <hr style="border:1px solid gray">
 
-# v1.1 (as of 24 April 2024)
+# v1.1 (as of 24 Apr 2024)
 
 ## ADDITIONS
 * Add more rooms (front yard, backyard, shed, etc.) -- 🟨
