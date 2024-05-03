@@ -1,6 +1,6 @@
 import os
 import time
-from PIL import Image
+# from PIL import Image
 
 
 #################################################################################################
@@ -10,15 +10,14 @@ def clear():
 
 
 # Display title screen
-# TODO uncomment when done testing
-# def prompt():
-#     print("---------------- Welcome to Beer Delivery Service \U0001F642 Nice to have you ----------------\n\n"
-#           "Pay attention to the words in all CAPS.\n\n"
-#           "If you end up getting stuck, you can type 'help' to learn various "
-#           "commands that may be useful.\n\n"
-#           "Have fun and good luck (it ain't hard... yet)!")
-#     time.sleep(8)
-#     clear()
+def prompt():
+    print("---------------- Welcome to Beer Delivery Service \U0001F642 Nice to have you ----------------\n\n"
+          "Pay attention to the words in all CAPS.\n\n"
+          "If you end up getting stuck, you can type 'help' to learn various "
+          "commands that may be useful.\n\n"
+          "Have fun and good luck (it ain't hard... yet)!")
+    time.sleep(8)
+    clear()
 
 
 def handle_help():
@@ -159,7 +158,7 @@ def handle_use(noun, current_room, rooms, containers, game_state):
     inventory = game_state["inventory"]
 
     if noun == "bed":
-        if game_state["beer_delivered"]:
+        if game_state["items_delivered"]:
             print('You rest your weary, beer-delivering eyes. '
                   'You wake up the next day, ready for whatever may lie ahead.\n\n'
                   'GAME OVER')
@@ -190,7 +189,7 @@ def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
     successful_give = False
     inventory = game_state["inventory"]
     npc_name = rooms[current_room]["npc"]
-    npc = dialogue.get(npc_name)
+    dialogue.get(npc_name)
 
     # If noun is empty, prompt the user for an item
     if noun == "":
@@ -213,23 +212,32 @@ def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
                             npc = npcs.get(npc_name)
 
                             # Check if the item is required by the NPC
-                            if npc and item in npcs[npc_name]["required_items"]:
+                            if npc and item in npcs[npc_name]["items_required"]:
                                 # update the game state when the beer is delivered
-                                game_state["beer_delivered"] = True
+                                npcs[npc_name]['items_delivered'].append(item)
                                 # updates the flag so the loop can break
                                 successful_give = True
                                 # quest success dialogue
                                 print(dialogue[npc_name]['give_response'])
-                                # clears the terminal after 3-second delay
-                                time.sleep(3)
-                                clear()
-                                # prompt to go to bed
-                                print('Boy I sure am beat from all that gathering. Time to go to bed.')
-                                break
+                                # checks to see if the list of required items matches the list of items delivered
+                                # if it does, it prints a message prompting the user to go to bed (i.e. endgame)
+                                if npcs[npc_name]['items_delivered'] == npcs[npc_name]['items_required']:
+                                    # clears the terminal after 3-second delay
+                                    time.sleep(3)
+                                    clear()
+                                    # prompt to go to bed
+                                    print('Boy I sure am beat from all that gathering. Time to go to bed.')
+                                    break
+                                else:
+                                    break
                         else:
                             print(f"{next_noun.capitalize()} isn't here to give {item} to.")
+                            time.sleep(1)
+                            clear()
                 else:
                     print(f"You don't have {item}.")
+                    time.sleep(1)
+                    clear()
 
 
 def handle_look_around(current_room, rooms):
@@ -242,7 +250,7 @@ def handle_look_obj(noun, current_room, rooms, game_state):
         if noun in rooms[current_room]["object"]:
             if noun == 'bed':
                 # Check if beer has been delivered using the game_state dictionary
-                if not game_state["beer_delivered"]:
+                if not game_state["items_delivered"]:
                     print('The bed looks mad comfy but it isn\'t time for sleep yet! '
                           'I still need to get dad his beer.')
                 else:
@@ -273,11 +281,11 @@ def handle_map():
         print(f"Map image for {current_room} not found.")
 
 
-#################################################################################################
+################################################################################################
 
 game_state = {
-    'beer_delivered': False,
-    'inventory': [],
+    'items_delivered': False,
+    'inventory': ['beer', 'cigar'],
     'current_room': 'living room'
 }
 
@@ -287,24 +295,25 @@ containers = {
         'locked': 'no',
         'item': 'beer'
     },
+    'cabinet': {
+        'open': 'no',
+        'locked': 'no',
+        'item': 'cigar key'
+    },
     'cigar case': {
         'open': 'no',
         'locked': 'yes',
         'item': 'cigar'
-    }
+    },
+
 }
 
 # list of npcs to handle if they have their proper quest items
 npcs = {
     'dad': {
-        'required_items': ['beer'],
-        'item_delivered': False
+        'items_required': ['beer', 'cigar'],
+        'items_delivered': []
     },
-    ####################################################
-    'bernard': {
-        'required_items': ['dog food'],
-        'item_delivered': False
-    }
 }
 
 rooms = {
@@ -353,7 +362,7 @@ rooms = {
             'mini-fridge': '',
             'shelf': '',
             'shelves': '',
-            'cigar case': ''
+            'cigar case': 'The lid says "Fine Blend Cigars." They look pretty fancy.'
         },
     },
     ####################################################
@@ -396,7 +405,7 @@ rooms = {
     ####################################################
     'backyard': {
         'description': 'Out back, this is where you and BERNARD like to play. '
-                       'You look about and see BERNARD in the DOGHOUSE and you also see the SHED.',
+                       'You look about and see BERNARD in the DOGHOUSE, as well as the SHED.',
         ('back', 'behind', 'kitchen'): 'kitchen',
         'shed': 'shed',
         'npc': 'bernard',
@@ -411,11 +420,12 @@ rooms = {
     'shed': {
         'description': '',
         ('back', 'behind', 'backyard'): 'backyard',
+        'container': 'cabinet',
         'object': {
             'around': '',
-            'obj1': '',
-            'obj2': '',
-            'obj3': '',
+            'cabinet': '',
+            'toolbox': '',
+            'cooler': '',
         }
     }
 }
@@ -457,8 +467,7 @@ current_room = game_state['current_room']
 # list of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
 
-# TODO uncomment when done testing
-# prompt()
+prompt()
 previous_room = current_room
 print(rooms[current_room]["description"])
 
@@ -466,7 +475,7 @@ print(rooms[current_room]["description"])
 
 # gameplay loop
 while True:
-    beer_delivered = False
+    items_delivered = False
     # this prevents the room descript from printing after every action
     if current_room != previous_room:
         clear()
