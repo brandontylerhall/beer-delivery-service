@@ -118,14 +118,19 @@ def handle_talk(noun, current_room, rooms, dialogue):
             print(f'\n{npc["greeting"]}')
 
             while True:
+                index = 0
                 # prints the dialogue menu in a numbered list
                 for index, question in enumerate(npc["questions"].keys(), start=1):
                     print(f'[{index}] {question}')
-                print('[9] Exit\n')
+                # this takes whatever the last question index is, adds 1, and puts "exit"
+                # at the end of the dialogue menu making it look more "natural"
+                exit_index = index + 1
+                print(f'[{exit_index}] Exit\n')
                 try:
                     choice_index = int(input('> '))
-                    # if they choose 9, it clears the console, prints the description, and breaks the loop
-                    if choice_index == 9:
+                    # if they choose exit, it clears the console,
+                    # prints the description, and breaks the loop
+                    if choice_index == exit_index:
                         clear()
                         print(rooms[current_room]["description"])
                         break
@@ -289,7 +294,7 @@ game_state = {
     # FIXME empty inventory
     'inventory': ['beer', 'cigar', 'cigar key'],
     # FIXME set current_room to living room
-    'current_room': 'study'
+    'current_room': 'front yard'
 }
 
 containers = {
@@ -313,12 +318,14 @@ containers = {
 
 # list of npcs to handle if they have their proper quest items
 npcs = {
+    'deliveries_complete': False,
     'dad': {
         'items_required': ['beer', 'cigar'],
         'items_delivered': []
     },
 }
 
+# TODO: put conditionals for the cigar case saying it's locked when it should be
 rooms = {
     'living room': {
         'description': 'You\'re in your living room. DAD is on the couch watching TV.\n'
@@ -369,8 +376,8 @@ rooms = {
                      'He\'s mostly got classic horror and things I\'ve never read. '
                      'They have cool covers, though.',
             'shelves': 'Dad has some pretty good books here. '
-                     'He\'s mostly got classic horror and things I\'ve never read. '
-                     'They have cool covers, though.',
+                       'He\'s mostly got classic horror and things I\'ve never read. '
+                       'They have cool covers, though.',
             'cigar case': 'The lid says "Fine Blend Cigars." They look pretty fancy.'
         },
     },
@@ -454,16 +461,21 @@ dialogue = {
         }
     },
     ####################################################
+    # TODO: conditional mom's dialogue so an added option happens
+    #  after you enter the study for the first time?
     'mom': {
-        'greeting': '',
+        'greeting': 'Hey sweetie, what\'s up?',
         'questions': {
-            'What are you doing?': '',
-            'Do you need anything?': '',
+            'What are you doing?': 'I\'m just planting my hydrangea\'s, dear. '
+                                   'It\'s probably my favorite thing to do these days.',
+            'Do you need anything?': 'No, I\'m going to head inside soon '
+                                     'to get some water. Thank you though, dear :)',
         }
     },
     ####################################################
+    # TODO: create conditionals for bernard's dialogue
     'bernard': {
-        'greeting': '',
+        'greeting': 'Greetings, compatriot. How may I be of service to you?',
         'questions': {
             'What are you doing?': '',
             'Do you need anything?': '',
@@ -479,6 +491,7 @@ current_room = game_state['current_room']
 # list of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
 
+# FIXME: uncomment after testing
 # prompt()
 previous_room = current_room
 print(rooms[current_room]["description"])
