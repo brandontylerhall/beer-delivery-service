@@ -1,6 +1,6 @@
 import os
 import time
-# from PIL import Image
+from PIL import Image
 
 
 #################################################################################################
@@ -272,7 +272,8 @@ def handle_inventory(game_state):
 
 
 def handle_map():
-    folder_path = "map_files"  # Specify the folder path where the map images are located
+    # TODO: CHANGE FILE PATH TO WHEREVER YOU SAVE THE GAME
+    folder_path = "C:\\Users\\bth0060\\PycharmProjects\\simple_game\\map_files"
     image_path = os.path.join(folder_path, f'{current_room}.png')
     try:
         Image.open(image_path).show()
