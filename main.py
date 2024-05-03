@@ -246,10 +246,10 @@ def handle_look_around(current_room, rooms):
 
 def handle_look_obj(noun, current_room, rooms, game_state):
     try:
-        # Use the game_state dictionary to check if the beer has been delivered
+        # Use the game_state dictionary to check if the items have been delivered
         if noun in rooms[current_room]["object"]:
             if noun == 'bed':
-                # Check if beer has been delivered using the game_state dictionary
+                # Check if all items have been delivered using the game_state dictionary
                 if not game_state["items_delivered"]:
                     print('The bed looks mad comfy but it isn\'t time for sleep yet! '
                           'I still need to get dad his beer.')
@@ -286,8 +286,10 @@ def handle_map():
 
 game_state = {
     'items_delivered': False,
-    'inventory': ['beer', 'cigar'],
-    'current_room': 'living room'
+    # FIXME empty inventory
+    'inventory': ['beer', 'cigar', 'cigar key'],
+    # FIXME set current_room to living room
+    'current_room': 'study'
 }
 
 containers = {
@@ -342,9 +344,10 @@ rooms = {
         ('right', 'study'): 'study',
         ('back', 'behind', 'living room'): 'living room',
         'object': {
-            'around': '',
-            'bedroom': '',
-            'study': '',
+            'around': 'Family photos are hung up all through the hallway. '
+                      'My favorite is the one of me and Dad when we both were super fat.',
+            'bedroom': 'My room is just through that door.',
+            'study': 'Dad\'s study is just through this door.',
         }
     },
     ####################################################
@@ -357,12 +360,17 @@ rooms = {
         'object': {
             'around': 'Dad\'s study. I don\'t know what he studies, but what I do know is that '
                       'I\'m not usually allowed in here. This time, however, duty calls.',
-            'desk': 'On Dad\'s desk you see the story he is currently reading, "The Beast in the Cave." '
+            'desk': 'On Dad\'s desk you see the story he is currently reading: "The Beast in the Cave." '
                     'You also see some sort of BOX',
             'box': 'You read the lid of the box. "Fine Blend Cigars." This must be Dad\'s CIGAR CASE.',
-            'mini-fridge': '',
-            'shelf': '',
-            'shelves': '',
+            'mini-fridge': 'Dad hides his Blanton\'s in here. He doesn\'t know that I '
+                           'take a sip every once in a while.',
+            'shelf': 'Dad has some pretty good books here. '
+                     'He\'s mostly got classic horror and things I\'ve never read. '
+                     'They have cool covers, though.',
+            'shelves': 'Dad has some pretty good books here. '
+                     'He\'s mostly got classic horror and things I\'ve never read. '
+                     'They have cool covers, though.',
             'cigar case': 'The lid says "Fine Blend Cigars." They look pretty fancy.'
         },
     },
@@ -397,10 +405,11 @@ rooms = {
         ('back', 'behind', 'living room'): 'living room',
         'npc': 'mom',
         'object': {
-            'around': 'Mom\'s flowers make the front yard really ',
-            'mom': '',
-            'garden': '',
-            'flowers': '',
+            'around': 'Mom\'s garden make the front yard look very colorful.',
+            'mom': 'Mom loves planting her hydrangeas.',
+            'garden': 'There\'s a wide variety of flowers and bushes in a patch of straw',
+            'flowers': 'I think Mom might be in a relationship with a bee because '
+                       'she\'s always out here when they\'re pollinating.',
         }
     },
     ####################################################
@@ -411,10 +420,9 @@ rooms = {
         'shed': 'shed',
         'npc': 'bernard',
         'object': {
-            'around': '',
-            'doghouse': '',
-            'shed': '',
-            'flowers': '',
+            'around': 'The treehouse dad built when I was little is still up in the oak.',
+            'doghouse': 'Bernard loves hanging out in his mighty palace.',
+            'shed': 'Outside of his study, this is Dad\'s favorite place to be.',
         }
     },
     ####################################################
@@ -423,10 +431,13 @@ rooms = {
         ('back', 'behind', 'backyard'): 'backyard',
         'container': 'cabinet',
         'object': {
-            'around': '',
-            'cabinet': '',
-            'toolbox': '',
-            'cooler': '',
+            'around': 'Woodworking tools are meticulously laid about the shed.',
+            'cabinet': 'This is where Dad likes to put his random junk after he\'s done '
+                       'working on his projects.',
+            'toolbox': 'You don\'t see anything of use to you. '
+                       'Just screwdrivers and the like.',
+            'cooler': 'This is Dad\'s portable beer fridge. He doesn\'t work without this '
+                      'thing being stocked.',
         }
     }
 }
@@ -468,7 +479,7 @@ current_room = game_state['current_room']
 # list of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
 
-prompt()
+# prompt()
 previous_room = current_room
 print(rooms[current_room]["description"])
 
