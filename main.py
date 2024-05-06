@@ -2,6 +2,246 @@ import os
 import time
 from PIL import Image
 
+#################################################################################################
+
+################################################################################################
+
+game_state = {
+    'items_delivered': False,
+    # FIXME empty inventory
+    'inventory': ['beer', 'cigar', 'cigar key'],
+    # FIXME set current_room to living room
+    'current_room': 'backyard',
+    'has_visited_study': True,
+    'talk_dad_after_study': True,
+}
+
+containers = {
+    'fridge': {
+        'open': 'no',
+        'locked': 'no',
+        'item': 'beer'
+    },
+    'cabinet': {
+        'open': 'no',
+        'locked': 'no',
+        'item': 'cigar key'
+    },
+    'cigar case': {
+        'open': 'no',
+        'locked': 'yes',
+        'item': 'cigar'
+    },
+
+}
+
+# list of npcs to handle if they have their proper quest items
+npcs = {
+    # TODO: figure out how to update this to True when all deliveries have been made.
+    #  This will become most useful when I implement more things to be delivered.
+    'deliveries_complete': False,
+    'dad': {
+        'items_required': ['beer', 'cigar'],
+        'items_delivered': []
+    },
+}
+
+# TODO: put conditionals for the cigar case saying it's locked when it should be
+rooms = {
+    'living room': {
+        'description': 'You\'re in your living room. DAD is on the couch watching TV.\n'
+                       'The KITCHEN is to your LEFT and the HALLWAY is to the RIGHT. '
+                       'BEHIND you is the door going out to the FRONT YARD',
+        ('back', 'behind', 'front yard'): 'front yard',
+        ('left', 'kitchen'): 'kitchen',
+        ('right', 'hallway'): 'hallway',
+        'npc': 'dad',
+        'item': 'beer',
+        'object': {
+            'around': 'There\'s probably half a case of empty Miller Light cans '
+                      'on the ottoman and another 3 on the table next to Dad.',
+            'dad': 'He looks pretty hammered.',
+            'tv': 'Dad\'s watching Tucker Carlson\'s podcast. His favorite.'
+        }
+    },
+    ####################################################
+    'hallway': {
+        'description': 'You stop in the hallway, contemplating if you want to go '
+                       'LEFT, to your BEDROOM, or RIGHT, to the STUDY. A hard choice, you know.',
+        ('left', 'bedroom'): 'bedroom',
+        ('right', 'study'): 'study',
+        ('back', 'behind', 'living room'): 'living room',
+        'object': {
+            'around': 'Family photos are hung up all through the hallway. '
+                      'My favorite is the one of me and Dad when we both were super fat.',
+            'bedroom': 'My room is just through that door.',
+            'study': 'Dad\'s study is just through this door.',
+        }
+    },
+    ####################################################
+    'study': {
+        'description': 'You enter Dad\'s study. Around you is a DESK where Dad reads his books, '
+                       'a few SHELVES where he keeps those books, and a MINI-FRIDGE where he keeps his '
+                       'more expensive alcohol.',
+        ('back', 'behind', 'hallway'): 'hallway',
+        'container': 'cigar case',
+        'object': {
+            'around': 'Dad\'s study. I don\'t know what he studies, but what I do know is that '
+                      'I\'m not usually allowed in here. This time, however, duty calls.',
+            'desk': 'On Dad\'s desk you see the story he is currently reading: "The Beast in the Cave." '
+                    'You also see some sort of BOX',
+            'box': 'You read the lid of the box. "Fine Blend Cigars." This must be Dad\'s CIGAR CASE.',
+            'mini-fridge': 'Dad hides his Blanton\'s in here. He doesn\'t know that I '
+                           'take a sip every once in a while.',
+            'shelf': 'Dad has some pretty good books here. '
+                     'He\'s mostly got classic horror and things I\'ve never read. '
+                     'They have cool covers, though.',
+            'shelves': 'Dad has some pretty good books here. '
+                       'He\'s mostly got classic horror and things I\'ve never read. '
+                       'They have cool covers, though.',
+            'cigar case': 'The lid says "Fine Blend Cigars." They look pretty fancy.'
+        },
+    },
+    ####################################################
+    'bedroom': {
+        'description': 'Your room is pretty tidy. You see your BED. It looks pretty damn comfy.',
+        ('left', 'living room'): 'living room',
+        ('back', 'behind', 'hallway'): 'hallway',
+        'object': {
+            'around': 'You have RuneScape posters and Star Wars legos hanging on your wall... Sick.',
+            'bed': 'I could really go for a rest about now.'
+        }
+    },
+    ####################################################
+    'kitchen': {
+        'description': 'In the kitchen, you can smell something cooking on the STOVE. '
+                       'Around you is the FRIDGE. '
+                       'STRAIGHT ahead leads the the BACKYARD and the LIVING ROOM is to the RIGHT.',
+        ('right', 'living room'): 'living room',
+        ('straight', 'forward', 'backyard'): 'backyard',
+        'container': 'fridge',
+        'object': {
+            'around': 'The fridge is slightly ajar, probably from when dad went to get his last beer.',
+            'stove': 'You look inside the pots and pans and it looks like a shrimp is frying some rice.',
+            'fridge': 'I think Dad said something about getting him something out of here.'
+        }
+    },
+    ####################################################
+    'front yard': {
+        'description': 'Out in the front yard, you see MOM diligently doing yard work. '
+                       'She is tending to her GARDEN, watering the FLOWERS.',
+        ('back', 'behind', 'living room'): 'living room',
+        'npc': 'mom',
+        'object': {
+            'around': 'Mom\'s garden make the front yard look very colorful.',
+            'mom': 'Mom loves planting her hydrangeas.',
+            'garden': 'There\'s a wide variety of flowers and bushes in a patch of straw',
+            'flowers': 'I think Mom might be in a relationship with a bee because '
+                       'she\'s always out here when they\'re pollinating.',
+        }
+    },
+    ####################################################
+    'backyard': {
+        'description': 'Out back, this is where you and BERNARD like to play. '
+                       'You look about and see BERNARD in the DOGHOUSE, as well as the SHED.',
+        ('back', 'behind', 'kitchen'): 'kitchen',
+        'shed': 'shed',
+        'npc': 'bernard',
+        'object': {
+            'around': 'The treehouse dad built when I was little is still up in the oak.',
+            'doghouse': 'Bernard loves hanging out in his mighty palace.',
+            'shed': 'Outside of his study, this is Dad\'s favorite place to be.',
+        }
+    },
+    ####################################################
+    'shed': {
+        'description': '',
+        ('back', 'behind', 'backyard'): 'backyard',
+        'container': 'cabinet',
+        'object': {
+            'around': 'Woodworking tools are meticulously laid about the shed.',
+            'cabinet': 'This is where Dad likes to put his random junk after he\'s done '
+                       'working on his projects.',
+            'toolbox': 'You don\'t see anything of use to you. '
+                       'Just screwdrivers and the like.',
+            'cooler': 'This is Dad\'s portable beer fridge. He doesn\'t work without this '
+                      'thing being stocked.',
+        }
+    }
+}
+
+dialogue = {
+    'dad': {
+        'greeting': 'Hey son, can you fetch me that BEER in the FRIDGE? '
+                    'It\'s next to the leftovers. I\'m absolutely parched.',
+        'give_response': 'Thanks son, I always liked you the best.',
+        'before_study': {
+            'How are you?': 'I\'m great. Just watching Tuck and drinking my Millers. What else could I ask for?',
+            'What are you doing?': 'Just kicking back. I still have the whole day ahead of me.',
+            'Do you need anything?': 'Yeah, actually. I would love that BEER I just mentioned if you wouldn\'t mind.'
+        },
+        "after_study":
+            {
+                'How are you?':
+                    'I\'m great. Just watching Tuck and drinking my Millers. What else could I ask for?',
+                'What are you doing?':
+                    'Just kicking back. I still have the whole day ahead of me.',
+                'Do you need anything?':
+                    'Yeah, actually. I would love that BEER I just mentioned if you wouldn\'t mind.',
+                "Do you happen to know where the key is to your cigar box?":
+                    "No, I last remember giving it to your mother. Maybe check with her."
+            }
+
+    },
+    ####################################################
+    'mom': {
+        'greeting': 'Hey sweetie, what\'s up?',
+        'before_talk_dad': {
+            'What are you doing?':
+                'I\'m just planting my hydrangea\'s, dear. '
+                'It\'s probably my favorite thing to do these days.',
+            'Do you need anything?': 'No, I\'m going to head inside soon '
+                                     'to get some water. Thank you though, dear :)',
+        },
+        'after_talk_dad': {
+            'What are you doing?':
+                'I\'m just planting my hydrangea\'s, dear. '
+                'It\'s probably my favorite thing to do these days.',
+            'Do you need anything?':
+                'No, I\'m going to head inside soon '
+                'to get some water. Thank you though, dear :)',
+            'Do you know what Dad did with the cigar case key?':
+                'I think he hid it somewhere in the shed. You know he likes to be extra.'
+        }
+    },
+    ####################################################
+    'bernard': {
+        'greeting': 'Greetings, compatriot. How may I be of service to you?',
+        'before_talk_dad': {
+            'What are you doing?': '',
+            'Do you need anything?': '',
+        },
+        'after_talk_dad': {
+            'What are you doing?': '',
+            'Do you need anything?': '',
+            'Do you know what Dad did with the cigar case key?': ''
+        }
+    },
+}
+
+#################################################################################################
+
+# tracks current room
+current_room = game_state['current_room']
+
+# list of vowels
+vowels = ['a', 'e', 'i', 'o', 'u']
+
+# FIXME: uncomment after testing
+# prompt()
+previous_room = current_room
+print(rooms[current_room]["description"])
+
 
 #################################################################################################
 
@@ -83,9 +323,10 @@ def handle_close(noun, current_room, rooms, containers):
         print(f'You don\'t see a {noun} to close.')
 
 
-def handle_go(noun, currentRoom, rooms):
+def handle_go(noun, currentRoom, rooms, game_state):
     # declares current_room as global to modify it
     global current_room
+
     if noun == '':
         print("You need to be more specific.")
     else:
@@ -96,6 +337,8 @@ def handle_go(noun, currentRoom, rooms):
             if isinstance(key, tuple) and noun in key:
                 current_room = value
                 game_state["current_room"] = current_room
+                if current_room == 'study':
+                    game_state['has_visited_study'] = True
                 return
         # if there is no tuple, it sets the current room like before
         if noun in rooms[currentRoom].keys():
@@ -105,39 +348,50 @@ def handle_go(noun, currentRoom, rooms):
             print('I can\'t go that way.')
 
 
-def handle_talk(noun, current_room, rooms, dialogue):
+def handle_talk(noun, current_room, rooms, dialogue, game_state):
     if noun == "":
         print("You need to be more specific.")
-    # goes through rooms, checks to see if there's any npc's and checks if the input is a valid npc
     elif 'npc' in rooms[current_room].keys() and rooms[current_room]["npc"] == noun.lower():
-        # gets the npc's dialogue
         npc_name = rooms[current_room]["npc"]
         npc = dialogue.get(npc_name)
 
         if npc:
+            if npc_name == "mom":
+                # check game state to determine which set of dialogue options to use
+                if game_state.get("talk_dad_after_study", True):
+                    # if player talked to Dad, use Mom's "after_dad" dialogue
+                    dialogue_options = npc.get("after_talk_dad", {})
+                else:
+                    dialogue_options = npc.get("before_talk_dad", {})
+            elif npc_name == "dad":
+                if game_state.get("has_visited_study", True):
+                    dialogue_options = npc.get("after_study", {})
+                    game_state["talk_dad_after_study"] = True
+                else:
+                    dialogue_options = npc.get("before_study", {})
+            elif npc_name == "bernard":
+                if game_state.get("talk_dad_after_study", True):
+                    dialogue_options = npc.get("after_talk_dad", {})
+                else:
+                    dialogue_options = npc.get("before_talk_dad", {})
+
             print(f'\n{npc["greeting"]}')
 
             while True:
                 index = 0
-                # prints the dialogue menu in a numbered list
-                for index, question in enumerate(npc["questions"].keys(), start=1):
+                for index, (question, response) in enumerate(dialogue_options.items(), start=1):
                     print(f'[{index}] {question}')
-                # this takes whatever the last question index is, adds 1, and puts "exit"
-                # at the end of the dialogue menu making it look more "natural"
                 exit_index = index + 1
                 print(f'[{exit_index}] Exit\n')
                 try:
                     choice_index = int(input('> '))
-                    # if they choose exit, it clears the console,
-                    # prints the description, and breaks the loop
                     if choice_index == exit_index:
                         clear()
                         print(rooms[current_room]["description"])
                         break
-                    # if they choose an actual option, it prints the value of the key
-                    if 1 <= choice_index <= len(npc["questions"]):
-                        question_key = list(npc["questions"].keys())[choice_index - 1]
-                        print(f'{npc["questions"][question_key]}\n')
+                    if 1 <= choice_index <= len(dialogue_options):
+                        question_key = list(dialogue_options.keys())[choice_index - 1]
+                        print(f'{dialogue_options[question_key]}\n')
                     else:
                         print('Invalid choice. Enter a number from the menu above.')
                 except ValueError:
@@ -277,7 +531,7 @@ def handle_inventory(game_state):
 
 
 def handle_map():
-    # TODO: CHANGE FILE PATH TO WHEREVER YOU SAVE THE GAME
+    # ***** CHANGE FILE PATH TO WHEREVER YOU SAVE THE GAME *****
     folder_path = "C:\\Users\\bth0060\\PycharmProjects\\simple_game\\map_files"
     image_path = os.path.join(folder_path, f'{current_room}.png')
     try:
@@ -287,220 +541,9 @@ def handle_map():
         print(f"Map image for {current_room} not found.")
 
 
-################################################################################################
-
-game_state = {
-    'items_delivered': False,
-    # FIXME empty inventory
-    'inventory': ['beer', 'cigar', 'cigar key'],
-    # FIXME set current_room to living room
-    'current_room': 'front yard'
-}
-
-containers = {
-    'fridge': {
-        'open': 'no',
-        'locked': 'no',
-        'item': 'beer'
-    },
-    'cabinet': {
-        'open': 'no',
-        'locked': 'no',
-        'item': 'cigar key'
-    },
-    'cigar case': {
-        'open': 'no',
-        'locked': 'yes',
-        'item': 'cigar'
-    },
-
-}
-
-# list of npcs to handle if they have their proper quest items
-npcs = {
-    'deliveries_complete': False,
-    'dad': {
-        'items_required': ['beer', 'cigar'],
-        'items_delivered': []
-    },
-}
-
-# TODO: put conditionals for the cigar case saying it's locked when it should be
-rooms = {
-    'living room': {
-        'description': 'You\'re in your living room. DAD is on the couch watching TV.\n'
-                       'The KITCHEN is to your LEFT and the HALLWAY is to the RIGHT. '
-                       'BEHIND you is the door going out to the FRONT YARD',
-        ('back', 'behind', 'front yard'): 'front yard',
-        ('left', 'kitchen'): 'kitchen',
-        ('right', 'hallway'): 'hallway',
-        'npc': 'dad',
-        'item': 'beer',
-        'object': {
-            'around': 'There\'s probably half a case of empty Miller Light cans '
-                      'on the ottoman and another 3 on the table next to Dad.',
-            'dad': 'He looks pretty hammered.',
-            'tv': 'Dad\'s watching Tucker Carlson\'s podcast. His favorite.'
-        }
-    },
-    ####################################################
-    'hallway': {
-        'description': 'You stop in the hallway, contemplating if you want to go '
-                       'LEFT, to your BEDROOM, or RIGHT, to the STUDY. A hard choice, you know.',
-        ('left', 'bedroom'): 'bedroom',
-        ('right', 'study'): 'study',
-        ('back', 'behind', 'living room'): 'living room',
-        'object': {
-            'around': 'Family photos are hung up all through the hallway. '
-                      'My favorite is the one of me and Dad when we both were super fat.',
-            'bedroom': 'My room is just through that door.',
-            'study': 'Dad\'s study is just through this door.',
-        }
-    },
-    ####################################################
-    'study': {
-        'description': 'You enter Dad\'s study. Around you is a DESK where Dad reads his books, '
-                       'a few SHELVES where he keeps those books, and a MINI-FRIDGE where he keeps his '
-                       'more expensive alcohol.',
-        ('back', 'behind', 'hallway'): 'hallway',
-        'container': 'cigar case',
-        'object': {
-            'around': 'Dad\'s study. I don\'t know what he studies, but what I do know is that '
-                      'I\'m not usually allowed in here. This time, however, duty calls.',
-            'desk': 'On Dad\'s desk you see the story he is currently reading: "The Beast in the Cave." '
-                    'You also see some sort of BOX',
-            'box': 'You read the lid of the box. "Fine Blend Cigars." This must be Dad\'s CIGAR CASE.',
-            'mini-fridge': 'Dad hides his Blanton\'s in here. He doesn\'t know that I '
-                           'take a sip every once in a while.',
-            'shelf': 'Dad has some pretty good books here. '
-                     'He\'s mostly got classic horror and things I\'ve never read. '
-                     'They have cool covers, though.',
-            'shelves': 'Dad has some pretty good books here. '
-                       'He\'s mostly got classic horror and things I\'ve never read. '
-                       'They have cool covers, though.',
-            'cigar case': 'The lid says "Fine Blend Cigars." They look pretty fancy.'
-        },
-    },
-    ####################################################
-    'bedroom': {
-        'description': 'Your room is pretty tidy. You see your BED. It looks pretty damn comfy.',
-        ('left', 'living room'): 'living room',
-        ('back', 'behind', 'hallway'): 'hallway',
-        'object': {
-            'around': 'You have RuneScape posters and Star Wars legos hanging on your wall... Sick.',
-            'bed': 'I could really go for a rest about now.'
-        }
-    },
-    ####################################################
-    'kitchen': {
-        'description': 'In the kitchen, you can smell something cooking on the STOVE. '
-                       'Around you is the FRIDGE. '
-                       'STRAIGHT ahead leads the the BACKYARD and the LIVING ROOM is to the RIGHT.',
-        ('right', 'living room'): 'living room',
-        ('straight', 'forward', 'backyard'): 'backyard',
-        'container': 'fridge',
-        'object': {
-            'around': 'The fridge is slightly ajar, probably from when dad went to get his last beer.',
-            'stove': 'You look inside the pots and pans and it looks like a shrimp is frying some rice.',
-            'fridge': 'I think Dad said something about getting him something out of here.'
-        }
-    },
-    ####################################################
-    'front yard': {
-        'description': 'Out in the front yard, you see MOM diligently doing yard work. '
-                       'She is tending to her GARDEN, watering the FLOWERS.',
-        ('back', 'behind', 'living room'): 'living room',
-        'npc': 'mom',
-        'object': {
-            'around': 'Mom\'s garden make the front yard look very colorful.',
-            'mom': 'Mom loves planting her hydrangeas.',
-            'garden': 'There\'s a wide variety of flowers and bushes in a patch of straw',
-            'flowers': 'I think Mom might be in a relationship with a bee because '
-                       'she\'s always out here when they\'re pollinating.',
-        }
-    },
-    ####################################################
-    'backyard': {
-        'description': 'Out back, this is where you and BERNARD like to play. '
-                       'You look about and see BERNARD in the DOGHOUSE, as well as the SHED.',
-        ('back', 'behind', 'kitchen'): 'kitchen',
-        'shed': 'shed',
-        'npc': 'bernard',
-        'object': {
-            'around': 'The treehouse dad built when I was little is still up in the oak.',
-            'doghouse': 'Bernard loves hanging out in his mighty palace.',
-            'shed': 'Outside of his study, this is Dad\'s favorite place to be.',
-        }
-    },
-    ####################################################
-    'shed': {
-        'description': '',
-        ('back', 'behind', 'backyard'): 'backyard',
-        'container': 'cabinet',
-        'object': {
-            'around': 'Woodworking tools are meticulously laid about the shed.',
-            'cabinet': 'This is where Dad likes to put his random junk after he\'s done '
-                       'working on his projects.',
-            'toolbox': 'You don\'t see anything of use to you. '
-                       'Just screwdrivers and the like.',
-            'cooler': 'This is Dad\'s portable beer fridge. He doesn\'t work without this '
-                      'thing being stocked.',
-        }
-    }
-}
-
-dialogue = {
-    'dad': {
-        'greeting': 'Hey son, can you fetch me that BEER in the FRIDGE? '
-                    'It\'s next to the leftovers. I\'m absolutely parched.',
-        'give_response': 'Thanks son, I always liked you the best.',
-        'questions': {
-            'How are you?': 'I\'m great. Just watching Tuck and drinking my Millers. What else could I ask for?',
-            'What are you doing?': 'Just kicking back. I still have the whole day ahead of me.',
-            'Do you need anything?': 'Yeah, actually. I would love that BEER I just mentioned if you wouldn\'t mind.'
-        }
-    },
-    ####################################################
-    # TODO: conditional mom's dialogue so an added option happens
-    #  after you enter the study for the first time?
-    'mom': {
-        'greeting': 'Hey sweetie, what\'s up?',
-        'questions': {
-            'What are you doing?': 'I\'m just planting my hydrangea\'s, dear. '
-                                   'It\'s probably my favorite thing to do these days.',
-            'Do you need anything?': 'No, I\'m going to head inside soon '
-                                     'to get some water. Thank you though, dear :)',
-        }
-    },
-    ####################################################
-    # TODO: create conditionals for bernard's dialogue
-    'bernard': {
-        'greeting': 'Greetings, compatriot. How may I be of service to you?',
-        'questions': {
-            'What are you doing?': '',
-            'Do you need anything?': '',
-        }
-    },
-}
-
-#################################################################################################
-
-# tracks current room
-current_room = game_state['current_room']
-
-# list of vowels
-vowels = ['a', 'e', 'i', 'o', 'u']
-
-# FIXME: uncomment after testing
-# prompt()
-previous_room = current_room
-print(rooms[current_room]["description"])
-
-#################################################################################################
-
 # gameplay loop
 while True:
-    items_delivered = False
+
     # this prevents the room descript from printing after every action
     if current_room != previous_room:
         clear()
@@ -530,13 +573,13 @@ while True:
     elif verb.lower() == 'close':
         handle_close(noun, current_room, rooms, containers)
     elif verb.lower() == 'talk':
-        handle_talk(noun, current_room, rooms, dialogue)
+        handle_talk(noun, current_room, rooms, dialogue, game_state)
     elif verb.lower() == 'take':
         handle_take(noun, current_room, rooms, game_state)
     elif verb.lower() == 'give':
         handle_give(noun, current_room, rooms, game_state, npcs, dialogue)
     elif verb.lower() == 'go':
-        handle_go(noun, current_room, rooms)
+        handle_go(noun, current_room, rooms, game_state)
     elif verb.lower() == 'inventory':
         handle_inventory(game_state)
     elif verb.lower() == 'look':
