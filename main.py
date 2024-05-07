@@ -11,10 +11,10 @@ game_state = {
     'has_visited_study': False,
     'talk_dad_after_study': False,
     'cigar_case_unlocked': False,
-    'items_required': ['beer', 'cigar', 'dog food'],
+    'items_required': ['beer', 'cigar',],
     'items_delivered': [],
     # FIXME empty inventory
-    'inventory': ['beer', 'cigar', 'dog food'],
+    'inventory': ['beer', 'cigar',],
     # FIXME set current_room to living room
     'current_room': 'living room',
 }
@@ -49,11 +49,10 @@ npcs = {
         'items_required': ['beer', 'cigar'],
         'items_delivered': []
     },
-    'bernard': {
-        'items_required': ['dog food'],
-        'items_delivered': []
-    },
-
+    # 'bernard': {
+    #     'items_required': ['dog food'],
+    #     'items_delivered': []
+    # },
 }
 
 rooms = {
@@ -503,7 +502,6 @@ def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
                                         # update the delivered items when the item is delivered
                                         inventory.remove(item)
                                         npc_item_reqs.remove(item)
-                                        print(f'npc_item_reqs: {npc_item_reqs}')
                                         reqs_delivered.append(item)
 
                                         # updates the flag so the loop can break
