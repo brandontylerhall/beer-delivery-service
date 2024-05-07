@@ -573,13 +573,14 @@ def handle_inventory(game_state):
     """
     Displays the map image for the current room.
 
-    This function retrieves the map image for the current room and displays it. It first sets the
-    `folder_path` variable to the path where the map images are stored. It then constructs the
-    `image_path` by joining the `folder_path` with the name of the current room followed by the
-    file extension ".png". It tries to open the image using the `Image.open()` function from the
-    `PIL` library and displays it using the `show()` method. If the map image is found, it prints
-    "Pulling out the map." If the map image is not found, it prints a message indicating that the
-    map image for the current room was not found.
+    This function retrieves the map image for the current room and displays it. It first gets the current
+    directory using `os.path.dirname(os.path.abspath(__file__))`. Then, it constructs the path to the
+    `map_files` directory by joining the current directory with the `map_files` directory name. Next, it
+    constructs the path to the image file by joining the `map_files` directory with the name of the
+    current room followed by the file extension `.png`. It tries to open the image using the
+    `Image.open()` function from the `PIL` library and displays it using the `show()` method. If the map
+    image is found, it prints "Pulling out the map." If the map image is not found, it prints a message
+    indicating that the map image for the current room was not found.
 
     Parameters:
     None
