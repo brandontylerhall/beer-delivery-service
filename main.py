@@ -570,16 +570,39 @@ def handle_inventory(game_state):
         print(f'Inventory: {", ".join(inventory)}')
 
 
+    """
+    Displays the map image for the current room.
+
+    This function retrieves the map image for the current room and displays it. It first sets the
+    `folder_path` variable to the path where the map images are stored. It then constructs the
+    `image_path` by joining the `folder_path` with the name of the current room followed by the
+    file extension ".png". It tries to open the image using the `Image.open()` function from the
+    `PIL` library and displays it using the `show()` method. If the map image is found, it prints
+    "Pulling out the map." If the map image is not found, it prints a message indicating that the
+    map image for the current room was not found.
+
+    Parameters:
+    None
+
+    Returns:
+    None
+    """
+
 def handle_map():
-    # ***** CHANGE FILE PATH TO WHEREVER YOU SAVE THE GAME *****
-    folder_path = "C:\\Users\\bth0060\\PycharmProjects\\simple_game\\map_files"
-    image_path = os.path.join(folder_path, f'{current_room}.png')
+    # Get the current directory
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the path to the map_files directory
+    map_files_directory = os.path.join(current_directory, 'map_files')
+
+    # Construct the path to the image file
+    image_path = os.path.join(map_files_directory, f'{current_room}.png')
+
     try:
         Image.open(image_path).show()
         print('Pulling out the map.')
     except FileNotFoundError:
         print(f"Map image for {current_room} not found.")
-
 
 # gameplay loop
 while True:
