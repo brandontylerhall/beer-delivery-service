@@ -8,12 +8,13 @@ from PIL import Image
 
 game_state = {
     'items_delivered': False,
+    'has_visited_study': False,
+    'talk_dad_after_study': False,
+    'cigar_case_unlocked': False,
     # FIXME empty inventory
     'inventory': ['beer', 'cigar', 'cigar key'],
     # FIXME set current_room to living room
-    'current_room': 'backyard',
-    'has_visited_study': True,
-    'talk_dad_after_study': True,
+    'current_room': 'living room',
 }
 
 containers = {
@@ -46,7 +47,6 @@ npcs = {
     },
 }
 
-# TODO: put conditionals for the cigar case saying it's locked when it should be
 rooms = {
     'living room': {
         'description': 'You\'re in your living room. DAD is on the couch watching TV.\n'
@@ -90,7 +90,11 @@ rooms = {
                       'I\'m not usually allowed in here. This time, however, duty calls.',
             'desk': 'On Dad\'s desk you see the story he is currently reading: "The Beast in the Cave." '
                     'You also see some sort of BOX',
-            'box': 'You read the lid of the box. "Fine Blend Cigars." This must be Dad\'s CIGAR CASE.',
+            'box': {
+                'locked': 'You read the lid of the box. "Fine Blend Cigars." '
+                          'This must be Dad\'s CIGAR CASE. It appears to be locked.',
+                'unlocked': 'You read the lid of the box. "Fine Blend Cigars." This must be Dad\'s CIGAR CASE.',
+            },
             'mini-fridge': 'Dad hides his Blanton\'s in here. He doesn\'t know that I '
                            'take a sip every once in a while.',
             'shelf': 'Dad has some pretty good books here. '
@@ -99,7 +103,11 @@ rooms = {
             'shelves': 'Dad has some pretty good books here. '
                        'He\'s mostly got classic horror and things I\'ve never read. '
                        'They have cool covers, though.',
-            'cigar case': 'The lid says "Fine Blend Cigars." They look pretty fancy.'
+            'cigar case': {
+                'locked': 'The lid says "Fine Blend Cigars." '
+                          'They look pretty fancy. The case appears to be locked.',
+                'unlocked': 'The lid says "Fine Blend Cigars." They look pretty fancy.'
+            }
         },
     },
     ####################################################
@@ -514,6 +522,11 @@ def handle_look_obj(noun, current_room, rooms, game_state):
                           'I still need to get dad his beer.')
                 else:
                     print(rooms[current_room]["object"][noun])
+            elif noun in ['cigar case', 'box']:
+                if game_state.get('cigar_case_unlocked', False):
+                    print(rooms[current_room]["object"][noun]['unlocked'])
+                else:
+                    print(rooms[current_room]["object"][noun]['locked'])
             else:
                 print(rooms[current_room]["object"][noun])
     except KeyError:
