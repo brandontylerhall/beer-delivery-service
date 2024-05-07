@@ -7,14 +7,16 @@ from PIL import Image
 ################################################################################################
 
 game_state = {
-    'items_delivered': False,
+    'all_items_delivered': False,
     'has_visited_study': False,
     'talk_dad_after_study': False,
     'cigar_case_unlocked': False,
+    'items_required': ['beer', 'cigar', 'dog food'],
+    'items_delivered': [],
     # FIXME empty inventory
-    'inventory': [],
+    'inventory': ['beer', 'cigar', 'dog food'],
     # FIXME set current_room to living room
-    'current_room': 'kitchen',
+    'current_room': 'living room',
 }
 
 containers = {
@@ -43,14 +45,15 @@ containers = {
 
 # list of npcs to handle if they have their proper quest items
 npcs = {
-    # TODO: figure out how to update this to True when all deliveries have been made.
-    #  This will become most useful when I implement more things to be delivered.
-    'deliveries_complete': False,
-    'items_required': ['beer', 'cigar', 'dog food'],
     'dad': {
         'items_required': ['beer', 'cigar'],
         'items_delivered': []
     },
+    'bernard': {
+        'items_required': ['dog food'],
+        'items_delivered': []
+    },
+
 }
 
 rooms = {
@@ -188,7 +191,8 @@ dialogue = {
     'dad': {
         'greeting': 'Hey son, can you fetch me that BEER in the FRIDGE? '
                     'It\'s next to the leftovers. I\'m absolutely parched.',
-        'give_response': 'Thanks son, I always liked you the best.',
+        'one_more_item': 'You know... a CIGAR would go absolutely great with this beer.',
+        'no_more_items': 'Thanks son, I always liked you the best.',
         'before_study': {
             'How are you?': 'I\'m great. Just watching Tuck and drinking my Millers. What else could I ask for?',
             'What are you doing?': 'Just kicking back. I still have the whole day ahead of me.',
@@ -231,6 +235,7 @@ dialogue = {
     ####################################################
     'bernard': {
         'greeting': 'Greetings, compatriot. How may I be of service to you?',
+        'no_more_items': 'Thank you, human.',
         'before_talk_dad': {
             'What are you doing?': '',
             'Do you need anything?': '',
@@ -441,7 +446,7 @@ def handle_use(noun, current_room, rooms, containers, game_state):
             time.sleep(10)
             exit()
         else:
-            print('It isn\'t sleepy time yet, dad need his beer!')
+            print('It isn\'t sleepy time yet, I have things I need to do!')
     elif noun == "cigar key":
         if noun in inventory:
             print("What do you want to use the key on?")
@@ -462,58 +467,73 @@ def handle_use(noun, current_room, rooms, containers, game_state):
 
 
 def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
-    successful_give = False
-    inventory = game_state["inventory"]
-    npc_name = rooms[current_room]["npc"]
-    dialogue.get(npc_name)
+    try:
+        successful_give = False
+        inventory = game_state["inventory"]
+        npc_name = rooms[current_room]["npc"]
+        item_reqs = game_state['items_required']
+        reqs_delivered = game_state['items_delivered']
+        dialogue.get(npc_name)
 
-    # If noun is empty, prompt the user for an item
-    if noun == "":
-        if not inventory:
-            print("You don't have any items to give.")
-        else:
-            while not successful_give:
-                print("What do you want to give?")
-                print(f'Inventory: {", ".join(inventory)}')
-                item = input("> ").lower()
-                if item == 'back':
-                    break
-                elif item in inventory:
-                    inventory.remove(item)
-                    while True:
-                        print(f"Who do you want to give the {item} to?")
-                        next_noun = input('> ').lower()
-                        if 'npc' in rooms[current_room].keys() and rooms[current_room]["npc"] == next_noun:
-                            npc_name = rooms[current_room]["npc"]
-                            npc = npcs.get(npc_name)
+        # If noun is empty, prompt the user for an item
+        if noun == "":
+            if not inventory:
+                print("You don't have any items to give.")
+            else:
+                while not successful_give:
+                    print("What do you want to give?")
+                    handle_inventory(game_state)
+                    item = input("> ").lower()
 
-                            # Check if the item is required by the NPC
-                            if npc and item in npcs[npc_name]["items_required"]:
-                                # update the game state when the beer is delivered
-                                npcs[npc_name]['items_delivered'].append(item)
-                                # updates the flag so the loop can break
-                                successful_give = True
-                                # quest success dialogue
-                                print(dialogue[npc_name]['give_response'])
-                                # checks to see if the list of required items matches the list of items delivered
-                                # if it does, it prints a message prompting the user to go to bed (i.e. endgame)
-                                if npcs[npc_name]['items_delivered'] == npcs[npc_name]['items_required']:
-                                    # clears the terminal after 3-second delay
-                                    time.sleep(3)
-                                    clear()
-                                    # prompt to go to bed
-                                    print('Boy I sure am beat from all that gathering. Time to go to bed.')
-                                    break
-                                else:
-                                    break
-                        else:
-                            print(f"{next_noun.capitalize()} isn't here to give {item} to.")
-                            time.sleep(1)
-                            clear()
-                else:
-                    print(f"You don't have {item}.")
-                    time.sleep(1)
-                    clear()
+                    if item == 'back':
+                        break
+                    elif item in inventory:
+                        while True:
+                            try:
+                                print(f"Who do you want to give the {item} to?")
+                                next_noun = input('> ').lower()
+                                npc_item_reqs = npcs[next_noun]['items_required']
+
+                                if 'npc' in rooms[current_room].keys() and rooms[current_room]["npc"] == next_noun:
+                                    npc_name = rooms[current_room]["npc"]
+                                    npc = npcs.get(npc_name)
+
+                                    # Check if the item is required by the NPC
+                                    if npc and item in item_reqs:
+                                        # update the delivered items when the item is delivered
+                                        inventory.remove(item)
+                                        npc_item_reqs.remove(item)
+                                        print(f'npc_item_reqs: {npc_item_reqs}')
+                                        reqs_delivered.append(item)
+
+                                        # updates the flag so the loop can break
+                                        successful_give = True
+                                        # quest success dialogue
+                                        if len(npc_item_reqs) == 0:
+                                            print(dialogue[npc_name]['no_more_items'])
+                                        else:
+                                            print(dialogue[npc_name]['one_more_item'])
+                                    # checks to see if the list of required items matches the list of items delivered
+                                    # if it does, it prints a message prompting the user to go to bed (i.e. endgame)
+                                    if item_reqs == reqs_delivered:
+                                        game_state['items_delivered'] = True
+                                        time.sleep(3)
+                                        clear()
+                                        # prompt to go to end game
+                                        print('Boy I sure am beat from all that gathering. Time to go to bed.')
+                                        break
+                                    else:
+                                        break
+                            except KeyError:
+                                print(f"{next_noun.capitalize()} isn't here to give {item} to.")
+                                time.sleep(2)
+                                clear()
+                    else:
+                        print(f"You don't have {item}.")
+                        time.sleep(1)
+                        clear()
+    except KeyError:
+        print("There isn't anyone here to give anything to.")
 
 
 def handle_look_around(current_room, rooms):
