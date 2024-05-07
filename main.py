@@ -12,9 +12,9 @@ game_state = {
     'talk_dad_after_study': False,
     'cigar_case_unlocked': False,
     # FIXME empty inventory
-    'inventory': ['beer', 'cigar', 'cigar key'],
+    'inventory': [],
     # FIXME set current_room to living room
-    'current_room': 'living room',
+    'current_room': 'kitchen',
 }
 
 containers = {
@@ -23,10 +23,15 @@ containers = {
         'locked': 'no',
         'item': 'beer'
     },
-    'cabinet': {
+    'tuff box': {
         'open': 'no',
         'locked': 'no',
         'item': 'cigar key'
+    },
+    'cabinet': {
+        'open': 'no',
+        'locked': 'no',
+        'item': 'dog food'
     },
     'cigar case': {
         'open': 'no',
@@ -41,6 +46,7 @@ npcs = {
     # TODO: figure out how to update this to True when all deliveries have been made.
     #  This will become most useful when I implement more things to be delivered.
     'deliveries_complete': False,
+    'items_required': ['beer', 'cigar', 'dog food'],
     'dad': {
         'items_required': ['beer', 'cigar'],
         'items_delivered': []
@@ -127,7 +133,7 @@ rooms = {
                        'STRAIGHT ahead leads the the BACKYARD and the LIVING ROOM is to the RIGHT.',
         ('right', 'living room'): 'living room',
         ('straight', 'forward', 'backyard'): 'backyard',
-        'container': 'fridge',
+        'container': ('fridge', 'cabinet'),
         'object': {
             'around': 'The fridge is slightly ajar, probably from when dad went to get his last beer.',
             'stove': 'You look inside the pots and pans and it looks like a shrimp is frying some rice.',
@@ -165,11 +171,11 @@ rooms = {
     'shed': {
         'description': '',
         ('back', 'behind', 'backyard'): 'backyard',
-        'container': 'cabinet',
+        'container': 'tuff box',
         'object': {
             'around': 'Woodworking tools are meticulously laid about the shed.',
-            'cabinet': 'This is where Dad likes to put his random junk after he\'s done '
-                       'working on his projects.',
+            'tuff box': 'This is where Dad likes to put his random junk after he\'s '
+                        'done working on his projects.',
             'toolbox': 'You don\'t see anything of use to you. '
                        'Just screwdrivers and the like.',
             'cooler': 'This is Dad\'s portable beer fridge. He doesn\'t work without this '
@@ -284,31 +290,34 @@ def handle_help():
 def handle_open(noun, current_room, rooms, containers, vowels):
     if noun == "":
         print("You need to be more specific.")
-    # if the room has a container in it and that container matches the input
-    elif 'container' in rooms[current_room].keys() and rooms[current_room]["container"] == noun.lower():
-        container_open = containers[noun]["open"]
-        container_locked = containers[noun]['locked']
-        # if the container is both unlocked and unopened, it will do the following
-        if container_locked == 'no' and container_open == 'no':
-            # container is now set to open
-            containers[noun]["open"] = 'yes'
-            rooms[current_room]["item"] = containers[noun]["item"]
-            # goes through rooms{} and checks to see if there are any items
-            if 'item' in rooms[current_room].keys():
-                nearby_item = rooms[current_room]["item"]
-                # if the last character of the item is an 's' (as in a plural item)
-                if nearby_item[-1] == 's':
-                    print(f'You open the {noun} and see {nearby_item.upper()}')
-                # else if the first letter of the item is a vowel
-                elif nearby_item[0] in vowels:
-                    print(f'You open the {noun} and see an {nearby_item.upper()}')
-                # else if the item is singular and starts with a consonant
-                else:
-                    print(f'You open the {noun} and see a {nearby_item.upper()}')
-        elif container_locked == 'yes':
-            print(f'The {noun} is locked. Maybe I should find a key...')
-        elif container_open == 'yes':
-            print(f'The {noun} is already open, dumb dumb.')
+    # checks if there is a container in the room
+    elif 'container' in rooms[current_room]:
+        # if so, will check
+        containers_in_room = rooms[current_room]['container']
+        if noun.lower() in containers_in_room:
+            container_open = containers[noun]["open"]
+            container_locked = containers[noun]['locked']
+            # if the container is both unlocked and unopened, it will do the following
+            if container_locked == 'no' and container_open == 'no':
+                # container is now set to open
+                containers[noun]["open"] = 'yes'
+                rooms[current_room]["item"] = containers[noun]["item"]
+                # goes through rooms{} and checks to see if there are any items
+                if 'item' in rooms[current_room].keys():
+                    nearby_item = rooms[current_room]["item"]
+                    # if the last character of the item is an 's' (as in a plural item)
+                    if nearby_item[-1] == 's':
+                        print(f'You open the {noun} and see {nearby_item.upper()}')
+                    # else if the first letter of the item is a vowel
+                    elif nearby_item[0] in vowels:
+                        print(f'You open the {noun} and see an {nearby_item.upper()}')
+                    # else if the item is singular and starts with a consonant
+                    else:
+                        print(f'You open the {noun} and see a {nearby_item.upper()}')
+            elif container_locked == 'yes':
+                print(f'The {noun} is locked. Maybe I should find a key...')
+            elif container_open == 'yes':
+                print(f'The {noun} is already open, dumb dumb.')
     else:
         print(f'You don\'t see a {noun} to open.')
 
