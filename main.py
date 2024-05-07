@@ -14,7 +14,7 @@ game_state = {
     'items_required': ['beer', 'cigar',],
     'items_delivered': [],
     # FIXME empty inventory
-    'inventory': ['beer', 'cigar',],
+    'inventory': [],
     # FIXME set current_room to living room
     'current_room': 'living room',
 }
