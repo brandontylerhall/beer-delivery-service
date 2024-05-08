@@ -55,7 +55,7 @@ rooms = {
     'living room': {
         'description': 'You\'re in your living room. DAD is on the couch watching TV.\n'
                        'The KITCHEN is to your LEFT and the HALLWAY is to the RIGHT. '
-                       'BEHIND you is the door going out to the FRONT YARD',
+                       'BEHIND you is the door going out to the FRONT YARD.',
         ('back', 'behind', 'front yard'): 'front yard',
         ('left', 'kitchen'): 'kitchen',
         ('right', 'hallway'): 'hallway',
@@ -93,7 +93,7 @@ rooms = {
             'around': 'Dad\'s study. I don\'t know what he studies, but what I do know is that '
                       'I\'m not usually allowed in here. This time, however, duty calls.',
             'desk': 'On Dad\'s desk you see the story he is currently reading: "The Beast in the Cave." '
-                    'You also see some sort of BOX',
+                    'You also see some sort of BOX.',
             'box': {
                 'locked': 'You read the lid of the box. "Fine Blend Cigars." '
                           'This must be Dad\'s CIGAR CASE. It appears to be locked.',
@@ -141,7 +141,7 @@ rooms = {
     ####################################################
     'front yard': {
         'description': 'Out in the front yard, you see MOM diligently doing yard work. '
-                       'She is tending to her GARDEN, watering the FLOWERS.',
+                       'She is tending to her GARDEN, watering her FLOWERS.',
         ('back', 'behind', 'living room'): 'living room',
         'npc': 'mom',
         'object': {
@@ -160,9 +160,12 @@ rooms = {
         'shed': 'shed',
         'npc': 'bernard',
         'object': {
-            'around': 'The treehouse dad built when I was little is still up in the oak.',
+            'around': 'The treehouse dad built when I was little is still up '
+                      'in the old oak.',
             'doghouse': 'Bernard loves hanging out in his mighty palace.',
             'shed': 'Outside of his study, this is Dad\'s favorite place to be.',
+            'bernard': 'Bernard has been with us longer than I can remember. '
+                       'He\'s a great friend to have around.'
         }
     },
     ####################################################
@@ -266,7 +269,6 @@ current_room = game_state['current_room']
 vowels = ['a', 'e', 'i', 'o', 'u']
 
 previous_room = current_room
-print(rooms[current_room]["description"])
 
 
 #################################################################################################
@@ -281,7 +283,7 @@ def prompt():
           "Pay attention to the words in all CAPS.\n\n"
           "If you end up getting stuck, you can type 'help' to learn various "
           "commands that may be useful.\n\n"
-          "Have fun and good luck (it ain't hard... yet)!")
+          "Have fun and good luck!")
     time.sleep(8)
     clear()
 
@@ -630,6 +632,7 @@ def handle_map():
 
 
 prompt()
+print(rooms[current_room]["description"])
 # gameplay loop
 while True:
 
