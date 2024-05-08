@@ -36,7 +36,7 @@ I have wanted to make my own text-adventure game for some time now. I originally
 
 ## ADDITIONS
 * Add more rooms (front yard, backyard, shed, etc.) -- 🟩
-* Add new characters (Mom, all-knowing ~~cat~~ dog named Bernard, etc.) -- 🟨
+* Add new characters (Mom, all-knowing ~~cat~~ dog named Bernard, etc.) -- 🟩
 * Add more items (Dad's cigar, wet ~~cat~~ dog food, etc.) -- 🟩
 * Change Dad's dialogue (it kinda sucks) -- 🟩
 * Add a map that shows what room the player currently is in -- 🟩
