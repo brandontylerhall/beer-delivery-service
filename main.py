@@ -2,21 +2,17 @@ import os
 import time
 from PIL import Image
 
-#################################################################################################
-
 ################################################################################################
 
 game_state = {
     'all_items_delivered': False,
     'has_visited_study': False,
-    'talk_dad_after_study': True,
+    'talk_dad_after_study': False,
     'cigar_case_unlocked': False,
     'given_dog_food': False,
     'items_required': ['beer', 'cigar', 'dog food'],
     'items_delivered': [],
-    # FIXME make sure to empty inventory
     'inventory': [],
-    # FIXME make sure to set current_room to living room
     'current_room': 'living room',
 }
 
@@ -44,7 +40,6 @@ containers = {
 
 }
 
-# list of npcs to handle if they have their proper quest items
 npcs = {
     'dad': {
         'items_required': ['beer', 'cigar'],
@@ -270,8 +265,6 @@ current_room = game_state['current_room']
 # list of vowels
 vowels = ['a', 'e', 'i', 'o', 'u']
 
-# FIXME: uncomment after testing
-# prompt()
 previous_room = current_room
 print(rooms[current_room]["description"])
 
@@ -360,7 +353,6 @@ def handle_close(noun, current_room, rooms, containers):
 
 
 def handle_go(noun, currentRoom, rooms, game_state):
-    # declares current_room as global to modify it
     global current_room
 
     if noun == '':
@@ -504,7 +496,7 @@ def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
         reqs_delivered = game_state['items_delivered']
         dialogue.get(npc_name)
 
-        # If noun is empty, prompt the user for an item
+        # if noun is empty, prompt the user for an item
         if noun == "":
             if not inventory:
                 print("You don't have any items to give.")
@@ -527,7 +519,7 @@ def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
                                     npc_name = rooms[current_room]["npc"]
                                     npc = npcs.get(npc_name)
 
-                                    # Check if the item is required by the NPC
+                                    # check if the item is required by the NPC
                                     if npc and item in item_reqs:
                                         # update the delivered items when the item is delivered
                                         inventory.remove(item)
@@ -637,6 +629,7 @@ def handle_map():
         print(f"Map image for {current_room} not found.")
 
 
+prompt()
 # gameplay loop
 while True:
 
