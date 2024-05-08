@@ -9,14 +9,15 @@ from PIL import Image
 game_state = {
     'all_items_delivered': False,
     'has_visited_study': False,
-    'talk_dad_after_study': False,
+    'talk_dad_after_study': True,
     'cigar_case_unlocked': False,
-    'items_required': ['beer', 'cigar', ],
+    'given_dog_food': False,
+    'items_required': ['beer', 'cigar', 'dog food'],
     'items_delivered': [],
     # FIXME make sure to empty inventory
-    'inventory': ['key'],
+    'inventory': [],
     # FIXME make sure to set current_room to living room
-    'current_room': 'shed',
+    'current_room': 'living room',
 }
 
 containers = {
@@ -49,10 +50,10 @@ npcs = {
         'items_required': ['beer', 'cigar'],
         'items_delivered': []
     },
-    # 'bernard': {
-    #     'items_required': ['dog food'],
-    #     'items_delivered': []
-    # },
+    'bernard': {
+        'items_required': ['dog food'],
+        'items_delivered': []
+    },
 }
 
 rooms = {
@@ -230,21 +231,33 @@ dialogue = {
                 'No, I\'m going to head inside soon '
                 'to get some water. Thank you though, dear :)',
             'Do you know what Dad did with the cigar case key?':
-                'I think he hid it somewhere in the shed. You know he likes to be extra.'
+                'I think I saw him take it somewhere out back. Try looking in the backyard, maybe?'
         }
     },
     ####################################################
     'bernard': {
         'greeting': 'Greetings, compatriot. How may I be of service to you?',
-        'no_more_items': 'Thank you, human.',
-        'before_talk_dad': {
-            'What are you doing?': '',
-            'Do you need anything?': '',
+        'no_more_items': 'I offer you my thanks, mere vessel of flesh and bone.',
+        'before_dog_food': {
+            'What are you doing?': 'I find myself ensconced within the warm embrace of daylight, '
+                                   'my form illuminated by its ethereal glow, '
+                                   'as I gnaw upon my bone with a primal fervor, '
+                                   'like a creature of ancient lineage, tethered to the primeval '
+                                   'rhythms of existence.',
+            'Do you need anything?': 'I am consumed by an insatiable hunger, a gnawing abyss within. '
+                                     'Should I not partake of sustenance with haste, '
+                                     'I fear I shall unwittingly invite the psychopomp Azrael to cast his '
+                                     'shadow upon me, drawing me into the void beyond mortal comprehension.',
         },
-        'after_talk_dad': {
-            'What are you doing?': '',
-            'Do you need anything?': '',
-            'Do you know what Dad did with the cigar case key?': ''
+        'after_dog_food': {
+            'What are you doing?': 'I find myself ensconced within the warm embrace of daylight, '
+                                   'my form illuminated by its ethereal glow, '
+                                   'as I gnaw upon my bone with a primal fervor, '
+                                   'like a creature of ancient lineage, tethered to the primeval '
+                                   'rhythms of existence.',
+            'Do you need anything?': 'I have transcended the need for the appendages of your lofty human form, '
+                                     'refined though they may be. '
+                                     'Gratitude is extended nonetheless for your gesture',
         }
     },
 }
@@ -393,10 +406,24 @@ def handle_talk(noun, current_room, rooms, dialogue, game_state):
                 else:
                     dialogue_options = npc.get("before_study", {})
             elif npc_name == "bernard":
-                if game_state.get("talk_dad_after_study", True):
-                    dialogue_options = npc.get("after_talk_dad", {})
+                # Check if talk_dad_after_study is True
+                if game_state.get("talk_dad_after_study", False):
+                    extra_option = "Do you know what Dad did with the cigar case key?"
+                    extra_response = ("The certainty eludes me, shrouded in the mists of uncertainty, "
+                                      "yet my gaze did perceive his descent into the stygian confines "
+                                      "of the shed, bearing with him that which incites dread. "
+                                      "Beyond that threshold, I dare not venture, "
+                                      "lest I invoke the horrors lurking within.")
+                    # if true, update both before and after dog food dialogue options
+                    if extra_option not in npc.get("before_dog_food", {}):
+                        npc["before_dog_food"][extra_option] = extra_response
+                    if extra_option not in npc.get("after_dog_food", {}):
+                        npc["after_dog_food"][extra_option] = extra_response
+
+                if game_state.get("given_dog_food", True):
+                    dialogue_options = npc.get("after_dog_food", {})
                 else:
-                    dialogue_options = npc.get("before_talk_dad", {})
+                    dialogue_options = npc.get("before_dog_food", {})
 
             print(f'\n{npc["greeting"]}')
 
@@ -516,7 +543,7 @@ def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
                                             print(dialogue[npc_name]['one_more_item'])
                                     # checks to see if the list of required items matches the list of items delivered
                                     # if it does, it prints a message prompting the user to go to bed (i.e. endgame)
-                                    if item_reqs == reqs_delivered:
+                                    if len(item_reqs) == len(reqs_delivered):
                                         game_state['items_delivered'] = True
                                         time.sleep(3)
                                         clear()
