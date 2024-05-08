@@ -13,10 +13,10 @@ game_state = {
     'cigar_case_unlocked': False,
     'items_required': ['beer', 'cigar', ],
     'items_delivered': [],
-    # FIXME empty inventory
-    'inventory': [],
-    # FIXME set current_room to living room
-    'current_room': 'living room',
+    # FIXME make sure to empty inventory
+    'inventory': ['key'],
+    # FIXME make sure to set current_room to living room
+    'current_room': 'shed',
 }
 
 containers = {
@@ -28,7 +28,7 @@ containers = {
     'tuff box': {
         'open': 'no',
         'locked': 'no',
-        'item': 'cigar key'
+        'item': 'key'
     },
     'cabinet': {
         'open': 'no',
@@ -103,6 +103,11 @@ rooms = {
                           'This must be Dad\'s CIGAR CASE. It appears to be locked.',
                 'unlocked': 'You read the lid of the box. "Fine Blend Cigars." This must be Dad\'s CIGAR CASE.',
             },
+            'cigar case': {
+                'locked': 'The lid says "Fine Blend Cigars." '
+                          'They look pretty fancy. The case appears to be locked.',
+                'unlocked': 'The lid says "Fine Blend Cigars." They look pretty fancy.'
+            },
             'mini-fridge': 'Dad hides his Blanton\'s in here. He doesn\'t know that I '
                            'take a sip every once in a while.',
             'shelf': 'Dad has some pretty good books here. '
@@ -110,12 +115,7 @@ rooms = {
                      'They have cool covers, though.',
             'shelves': 'Dad has some pretty good books here. '
                        'He\'s mostly got classic horror and things I\'ve never read. '
-                       'They have cool covers, though.',
-            'cigar case': {
-                'locked': 'The lid says "Fine Blend Cigars." '
-                          'They look pretty fancy. The case appears to be locked.',
-                'unlocked': 'The lid says "Fine Blend Cigars." They look pretty fancy.'
-            }
+                       'They have cool covers, though.'
         },
     },
     ####################################################
@@ -171,13 +171,15 @@ rooms = {
     },
     ####################################################
     'shed': {
-        'description': '',
+        'description': 'You enter the shed. You see a bunch of tools, a TOOLBOX, '
+                       'some cabinets, and a TUFF BOX. Under a table saw, you see a COOLER.',
         ('back', 'behind', 'backyard'): 'backyard',
         'container': 'tuff box',
         'object': {
-            'around': 'Woodworking tools are meticulously laid about the shed.',
-            'tuff box': 'This is where Dad likes to put his random junk after he\'s '
-                        'done working on his projects.',
+            'around': 'This is Dad\'s favorite place outside of his study. '
+                      'You see woodworking tools that are meticulously laid about.',
+            'tuff box': 'You peek inside the tuff box. You see a bunch of loose '
+                        'junk, rags, and a KEY.',
             'toolbox': 'You don\'t see anything of use to you. '
                        'Just screwdrivers and the like.',
             'cooler': 'This is Dad\'s portable beer fridge. He doesn\'t work without this '
@@ -296,8 +298,8 @@ def handle_open(noun, current_room, rooms, containers, vowels):
         print("You need to be more specific.")
     # checks if there is a container in the room
     elif 'container' in rooms[current_room]:
-        # if so, will check
         containers_in_room = rooms[current_room]['container']
+        # if so, will check if what the user input is in fact the container in the current room
         if noun.lower() in containers_in_room:
             container_open = containers[noun]["open"]
             container_locked = containers[noun]['locked']
@@ -446,7 +448,7 @@ def handle_use(noun, current_room, rooms, containers, game_state):
             exit()
         else:
             print('It isn\'t sleepy time yet, I have things I need to do!')
-    elif noun == "cigar key":
+    elif noun == "key":
         if noun in inventory:
             print("What do you want to use the key on?")
             use_key_on = input("> ").lower()
@@ -454,13 +456,14 @@ def handle_use(noun, current_room, rooms, containers, game_state):
                 if use_key_on in rooms[current_room]["object"]:
                     inventory.remove(noun)
                     containers[use_key_on]["locked"] = "no"
+                    game_state['cigar_case_unlocked'] = True
                     print(f"You unlocked the {use_key_on}.")
                 else:
                     print(f"There is no {use_key_on} to use that on.")
             else:
                 print(f"That key doesn't open {use_key_on}")
         else:
-            print("You don't have a cigar key.")
+            print("You don't have a key.")
     else:
         print('Nothing interesting happens.')
 
