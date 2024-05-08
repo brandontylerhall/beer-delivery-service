@@ -11,7 +11,7 @@ game_state = {
     'has_visited_study': False,
     'talk_dad_after_study': False,
     'cigar_case_unlocked': False,
-    'items_required': ['beer', 'cigar',],
+    'items_required': ['beer', 'cigar', ],
     'items_delivered': [],
     # FIXME empty inventory
     'inventory': [],
@@ -570,24 +570,25 @@ def handle_inventory(game_state):
         print(f'Inventory: {", ".join(inventory)}')
 
 
-    """
-    Displays the map image for the current room.
+"""
+Displays the map image for the current room.
 
-    This function retrieves the map image for the current room and displays it. It first gets the current
-    directory using `os.path.dirname(os.path.abspath(__file__))`. Then, it constructs the path to the
-    `map_files` directory by joining the current directory with the `map_files` directory name. Next, it
-    constructs the path to the image file by joining the `map_files` directory with the name of the
-    current room followed by the file extension `.png`. It tries to open the image using the
-    `Image.open()` function from the `PIL` library and displays it using the `show()` method. If the map
-    image is found, it prints "Pulling out the map." If the map image is not found, it prints a message
-    indicating that the map image for the current room was not found.
+The following function retrieves the map image for the current room and displays it. It first gets the current
+directory using `os.path.dirname(os.path.abspath(__file__))`. Then, it constructs the path to the
+`map_files` directory by joining the current directory with the `map_files` directory name. Next, it
+constructs the path to the image file by joining the `map_files` directory with the name of the
+current room followed by the file extension `.png`. It tries to open the image using the
+`Image.open()` function from the `PIL` library and displays it using the `show()` method. If the map
+image is found, it prints "Pulling out the map." If the map image is not found, it prints a message
+indicating that the map image for the current room was not found.
 
-    Parameters:
-    None
+Parameters:
+None
 
-    Returns:
-    None
-    """
+Returns:
+None
+"""
+
 
 def handle_map():
     # Get the current directory
@@ -604,6 +605,7 @@ def handle_map():
         print('Pulling out the map.')
     except FileNotFoundError:
         print(f"Map image for {current_room} not found.")
+
 
 # gameplay loop
 while True:
