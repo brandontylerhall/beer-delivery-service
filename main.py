@@ -267,9 +267,6 @@ dialogue = {
 # tracks current room
 current_room = game_state['current_room']
 
-# list of vowels
-vowels = ['a', 'e', 'i', 'o', 'u']
-
 previous_room = current_room
 
 
@@ -303,7 +300,7 @@ def handle_help():
           'USE (OBJECT) -- Use an object')
 
 
-def handle_open(noun, current_room, rooms, containers, vowels):
+def handle_open(noun, current_room, rooms, containers):
     if noun == "":
         print("You need to be more specific.")
     # checks if there is a container in the room
@@ -321,19 +318,12 @@ def handle_open(noun, current_room, rooms, containers, vowels):
                 # goes through rooms{} and checks to see if there are any items
                 if 'item' in rooms[current_room].keys():
                     nearby_item = rooms[current_room]["item"]
-                    # if the last character of the item is an 's' (as in a plural item)
-                    if nearby_item[-1] == 's':
-                        print(f'You open the {noun} and see {nearby_item.upper()}.')
-                    # else if the first letter of the item is a vowel
-                    elif nearby_item[0] in vowels:
-                        print(f'You open the {noun} and see an {nearby_item.upper()}.')
-                    # else if the item is singular and starts with a consonant
-                    else:
-                        print(f'You open the {noun} and see a {nearby_item.upper()}.')
+                    print(f'You open the {noun} and see: {nearby_item.upper()}.')
             elif container_locked == 'yes':
                 print(f'The {noun} is locked. Maybe I should find a key...')
             elif container_open == 'yes':
                 print(f'The {noun} is already open, dumb dumb.')
+
     else:
         print(f'You don\'t see a {noun} to open.')
 
@@ -674,7 +664,7 @@ while True:
         print("Exiting the game. Goodbye!")
         break
     elif verb.lower() == 'open':
-        handle_open(noun, current_room, rooms, containers, vowels)
+        handle_open(noun, current_room, rooms, containers)
     elif verb.lower() == 'close':
         handle_close(noun, current_room, rooms, containers)
     elif verb.lower() == 'talk':
