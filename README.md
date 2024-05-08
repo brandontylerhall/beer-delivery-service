@@ -50,3 +50,8 @@ I have wanted to make my own text-adventure game for some time now. I originally
 * _that's all I can think of right now_
 
 <hr style="border:1px solid gray">
+
+# v1.2 (as of 8 May 2024)
+
+## CHANGES
+* Refactor entire program, making it modular. Having 700 lines in main just ain't it, brother. -- 🟥
