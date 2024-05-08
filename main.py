@@ -6,6 +6,7 @@ from PIL import Image
 
 game_state = {
     'all_items_delivered': False,
+    'beer_delivered': False,
     'has_visited_study': False,
     'talk_dad_after_study': False,
     'cigar_case_unlocked': False,
@@ -27,7 +28,7 @@ containers = {
         'locked': 'no',
         'item': 'key'
     },
-    'cabinet': {
+    'cabinets': {
         'open': 'no',
         'locked': 'no',
         'item': 'dog food'
@@ -127,15 +128,17 @@ rooms = {
     ####################################################
     'kitchen': {
         'description': 'In the kitchen, you can smell something cooking on the STOVE. '
-                       'Around you is the FRIDGE. '
+                       'Around you is the FRIDGE and the brand new CABINETS. '
                        'STRAIGHT ahead leads the the BACKYARD and the LIVING ROOM is to the RIGHT.',
         ('right', 'living room'): 'living room',
         ('straight', 'forward', 'backyard'): 'backyard',
-        'container': ('fridge', 'cabinet'),
+        'container': ('fridge', 'cabinets'),
         'object': {
             'around': 'The fridge is slightly ajar, probably from when dad went to get his last beer.',
             'stove': 'You look inside the pots and pans and it looks like a shrimp is frying some rice.',
-            'fridge': 'I think Dad said something about getting him something out of here.'
+            'fridge': 'I think Dad said something about getting him something out of here.',
+            'cabinets': 'Mom and Dad finally got these replaced. The old ones were '
+                        'literally falling apart.'
         }
     },
     ####################################################
@@ -209,7 +212,6 @@ dialogue = {
                 "Do you happen to know where the key is to your cigar box?":
                     "No, I last remember giving it to your mother. Maybe check with her."
             }
-
     },
     ####################################################
     'mom': {
@@ -255,7 +257,7 @@ dialogue = {
                                    'rhythms of existence.',
             'Do you need anything?': 'I have transcended the need for the appendages of your lofty human form, '
                                      'refined though they may be. '
-                                     'Gratitude is extended nonetheless for your gesture',
+                                     'Gratitude is extended nonetheless for your gesture.',
         }
     },
 }
@@ -321,13 +323,13 @@ def handle_open(noun, current_room, rooms, containers, vowels):
                     nearby_item = rooms[current_room]["item"]
                     # if the last character of the item is an 's' (as in a plural item)
                     if nearby_item[-1] == 's':
-                        print(f'You open the {noun} and see {nearby_item.upper()}')
+                        print(f'You open the {noun} and see {nearby_item.upper()}.')
                     # else if the first letter of the item is a vowel
                     elif nearby_item[0] in vowels:
-                        print(f'You open the {noun} and see an {nearby_item.upper()}')
+                        print(f'You open the {noun} and see an {nearby_item.upper()}.')
                     # else if the item is singular and starts with a consonant
                     else:
-                        print(f'You open the {noun} and see a {nearby_item.upper()}')
+                        print(f'You open the {noun} and see a {nearby_item.upper()}.')
             elif container_locked == 'yes':
                 print(f'The {noun} is locked. Maybe I should find a key...')
             elif container_open == 'yes':
@@ -394,6 +396,12 @@ def handle_talk(noun, current_room, rooms, dialogue, game_state):
                 else:
                     dialogue_options = npc.get("before_talk_dad", {})
             elif npc_name == "dad":
+                if game_state.get("beer_delivered", False):
+                    dialogue['dad']['before_study']['Do you need anything?'] = \
+                        'Yeah, actually. I would love that CIGAR I just mentioned if you wouldn\'t mind.'
+                    dialogue['dad']['after_study']['Do you need anything?'] = \
+                        'Yeah, actually. I would love that CIGAR I just mentioned if you wouldn\'t mind.'
+
                 if game_state.get("has_visited_study", True):
                     dialogue_options = npc.get("after_study", {})
                     game_state["talk_dad_after_study"] = True
@@ -523,6 +531,7 @@ def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
 
                                     # check if the item is required by the NPC
                                     if npc and item in item_reqs:
+
                                         # update the delivered items when the item is delivered
                                         inventory.remove(item)
                                         npc_item_reqs.remove(item)
@@ -530,6 +539,10 @@ def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
 
                                         # updates the flag so the loop can break
                                         successful_give = True
+                                        if item == 'dog food':
+                                            game_state['given_dog_food'] = True
+                                        if item == 'beer':
+                                            game_state['beer_delivered'] = True
                                         # quest success dialogue
                                         if len(npc_item_reqs) == 0:
                                             print(dialogue[npc_name]['no_more_items'])
@@ -631,7 +644,7 @@ def handle_map():
         print(f"Map image for {current_room} not found.")
 
 
-prompt()
+# prompt()
 print(rooms[current_room]["description"])
 # gameplay loop
 while True:
