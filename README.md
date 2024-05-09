@@ -54,4 +54,4 @@ I have wanted to make my own text-adventure game for some time now. I originally
 # v1.2 (as of 8 May 2024)
 
 ## CHANGES
-* Refactor entire program, making it modular. Having 700 lines in main just ain't it, brother. -- 🟥
+* Refactor entire program, making it modular. Having 700 lines in main just ain't it, brother. -- 🟩 (this should probably be yellow but I just cannot for the life of me figure out how to separate handle_go() from main)
