@@ -16,3 +16,13 @@ def handle_help():
           'TAKE (ITEM) -- Take an item\n'
           'TALK (PERSON) -- Talk to someone\n'
           'USE (OBJECT) -- Use an object')
+
+
+def handle_inventory(game_state):
+    inventory = game_state["inventory"]
+
+    # checks if inventory is empty
+    if not inventory:
+        print('You aren\'t carrying anything.')
+    else:
+        print(f'Inventory: {", ".join(inventory)}')
