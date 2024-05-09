@@ -1,6 +1,8 @@
-import os
 import time
-from PIL import Image
+import utility
+import speech
+import game_navigation
+import user_action
 
 ################################################################################################
 
@@ -272,9 +274,6 @@ previous_room = current_room
 
 #################################################################################################
 
-def clear():
-    os.system('cls' if os.name == 'nt' else 'clear')
-
 
 # Display title screen
 def prompt():
@@ -284,66 +283,7 @@ def prompt():
           "commands that may be useful.\n\n"
           "Have fun and good luck!")
     time.sleep(8)
-    clear()
-
-
-def handle_help():
-    print('Commands:\n'
-          'CLEAR -- Clear screen\n'
-          'GIVE -- Opens a menu to give an item to someone\n'
-          'GO (DIRECTION/ROOM NAME) -- Go a direction\n'
-          'INVENTORY -- Shows what you\'re carrying\n'
-          'LOOK (OBJECT/DIRECTION) -- Look around, look at an object, etc\n'
-          'MAP -- Shows the map\n'
-          'TAKE (ITEM) -- Take an item\n'
-          'TALK (PERSON) -- Talk to someone\n'
-          'USE (OBJECT) -- Use an object')
-
-
-def handle_open(noun, current_room, rooms, containers):
-    if noun == "":
-        print("You need to be more specific.")
-    # checks if there is a container in the room
-    elif 'container' in rooms[current_room]:
-        containers_in_room = rooms[current_room]['container']
-        # if so, will check if what the user input is in fact the container in the current room
-        if noun.lower() in containers_in_room:
-            container_open = containers[noun]["open"]
-            container_locked = containers[noun]['locked']
-            # if the container is both unlocked and unopened, it will do the following
-            if container_locked == 'no' and container_open == 'no':
-                # container is now set to open
-                containers[noun]["open"] = 'yes'
-                rooms[current_room]["item"] = containers[noun]["item"]
-                # goes through rooms{} and checks to see if there are any items
-                if 'item' in rooms[current_room].keys():
-                    nearby_item = rooms[current_room]["item"]
-                    print(f'You open the {noun} and see: {nearby_item.upper()}.')
-            elif container_locked == 'yes':
-                print(f'The {noun} is locked. Maybe I should find a key...')
-            elif container_open == 'yes':
-                print(f'The {noun} is already open, dumb dumb.')
-
-    else:
-        print(f'You don\'t see a {noun} to open.')
-
-
-def handle_close(noun, current_room, rooms, containers):
-    if noun == "":
-        print("You need to be more specific.")
-    # if the room has a container in it and that container matches the input
-    elif 'container' in rooms[current_room].keys() and rooms[current_room]["container"] == noun.lower():
-        container_open = containers[noun]["open"]
-        # if the container is both unlocked and unopened, it will do the following
-        if container_open == 'yes':
-            containers[noun]["open"] = 'no'
-            try:
-                del rooms[current_room]["item"]
-                print(f'You close the {noun}')
-            except KeyError:
-                print(f'You don\'t see a {noun} to close.')
-    else:
-        print(f'You don\'t see a {noun} to close.')
+    utility.clear()
 
 
 def handle_go(noun, currentRoom, rooms, game_state):
@@ -370,270 +310,6 @@ def handle_go(noun, currentRoom, rooms, game_state):
             print('I can\'t go that way.')
 
 
-def handle_talk(noun, current_room, rooms, dialogue, game_state):
-    if noun == "":
-        print("You need to be more specific.")
-    elif 'npc' in rooms[current_room].keys() and rooms[current_room]["npc"] == noun.lower():
-        npc_name = rooms[current_room]["npc"]
-        npc = dialogue.get(npc_name)
-
-        if npc:
-            if npc_name == "mom":
-                # check game state to determine which set of dialogue options to use
-                if game_state.get("talk_dad_after_study", True):
-                    # if player talked to Dad, use Mom's "after_dad" dialogue
-                    dialogue_options = npc.get("after_talk_dad", {})
-                else:
-                    dialogue_options = npc.get("before_talk_dad", {})
-            elif npc_name == "dad":
-                if game_state.get("beer_delivered", False):
-                    dialogue['dad']['before_study']['Do you need anything?'] = \
-                        'Yeah, actually. I would love that CIGAR I just mentioned if you wouldn\'t mind.'
-                    dialogue['dad']['after_study']['Do you need anything?'] = \
-                        'Yeah, actually. I would love that CIGAR I just mentioned if you wouldn\'t mind.'
-
-                if game_state.get("has_visited_study", True):
-                    dialogue_options = npc.get("after_study", {})
-                    game_state["talk_dad_after_study"] = True
-                else:
-                    dialogue_options = npc.get("before_study", {})
-            elif npc_name == "bernard":
-                # Check if talk_dad_after_study is True
-                if game_state.get("talk_dad_after_study", False):
-                    extra_option = "Do you know what Dad did with the cigar case key?"
-                    extra_response = ("The certainty eludes me, shrouded in the mists of uncertainty, "
-                                      "yet my gaze did perceive his descent into the stygian confines "
-                                      "of the shed, bearing with him that which incites dread. "
-                                      "Beyond that threshold, I dare not venture, "
-                                      "lest I invoke the horrors lurking within.")
-                    # if true, update both before and after dog food dialogue options
-                    if extra_option not in npc.get("before_dog_food", {}):
-                        npc["before_dog_food"][extra_option] = extra_response
-                    if extra_option not in npc.get("after_dog_food", {}):
-                        npc["after_dog_food"][extra_option] = extra_response
-
-                if game_state.get("given_dog_food", True):
-                    dialogue_options = npc.get("after_dog_food", {})
-                else:
-                    dialogue_options = npc.get("before_dog_food", {})
-
-            print(f'\n{npc["greeting"]}')
-
-            while True:
-                index = 0
-                for index, (question, response) in enumerate(dialogue_options.items(), start=1):
-                    print(f'[{index}] {question}')
-                exit_index = index + 1
-                print(f'[{exit_index}] Exit\n')
-                try:
-                    choice_index = int(input('> '))
-                    if choice_index == exit_index:
-                        clear()
-                        print(rooms[current_room]["description"])
-                        break
-                    if 1 <= choice_index <= len(dialogue_options):
-                        question_key = list(dialogue_options.keys())[choice_index - 1]
-                        print(f'{dialogue_options[question_key]}\n')
-                    else:
-                        print('Invalid choice. Enter a number from the menu above.')
-                except ValueError:
-                    print("Invalid input. Please enter a number from the menu above.")
-    else:
-        print(f"There's no one here to talk to named {noun.capitalize()}.")
-
-
-def handle_take(noun, current_room, rooms, game_state):
-    inventory = game_state["inventory"]
-
-    if noun == "":
-        print("You need to be more specific.")
-    elif 'item' in rooms[current_room].keys() and rooms[current_room]["item"] == noun.lower():
-        inventory.append(rooms[current_room]["item"])
-        print(f'You take the {noun}.')
-        del rooms[current_room]["item"]
-    else:
-        print(f'You look around and you don\'t see one of those.')
-
-
-def handle_use(noun, current_room, rooms, containers, game_state):
-    inventory = game_state["inventory"]
-
-    if noun == "bed":
-        if game_state["items_delivered"]:
-            print('You rest your weary, beer-delivering eyes. '
-                  'You wake up the next day, ready for whatever may lie ahead.\n\n'
-                  'GAME OVER')
-            time.sleep(10)
-            exit()
-        else:
-            print('It isn\'t sleepy time yet, I have things I need to do!')
-    elif noun == "key":
-        if noun in inventory:
-            print("What do you want to use the key on?")
-            use_key_on = input("> ").lower()
-            if use_key_on == 'cigar case':
-                if use_key_on in rooms[current_room]["object"]:
-                    inventory.remove(noun)
-                    containers[use_key_on]["locked"] = "no"
-                    game_state['cigar_case_unlocked'] = True
-                    print(f"You unlocked the {use_key_on}.")
-                else:
-                    print(f"There is no {use_key_on} to use that on.")
-            else:
-                print(f"That key doesn't open {use_key_on}")
-        else:
-            print("You don't have a key.")
-    else:
-        print('Nothing interesting happens.')
-
-
-def handle_give(noun, current_room, rooms, game_state, npcs, dialogue):
-    try:
-        successful_give = False
-        inventory = game_state["inventory"]
-        npc_name = rooms[current_room]["npc"]
-        item_reqs = game_state['items_required']
-        reqs_delivered = game_state['items_delivered']
-        dialogue.get(npc_name)
-
-        # if noun is empty, prompt the user for an item
-        if noun == "":
-            if not inventory:
-                print("You don't have any items to give.")
-            else:
-                while not successful_give:
-                    print("What do you want to give?")
-                    handle_inventory(game_state)
-                    item = input("> ").lower()
-
-                    if item == 'back':
-                        break
-                    elif item in inventory:
-                        while True:
-                            try:
-                                print(f"Who do you want to give the {item} to?")
-                                next_noun = input('> ').lower()
-                                npc_item_reqs = npcs[next_noun]['items_required']
-
-                                if 'npc' in rooms[current_room].keys() and rooms[current_room]["npc"] == next_noun:
-                                    npc_name = rooms[current_room]["npc"]
-                                    npc = npcs.get(npc_name)
-
-                                    # check if the item is required by the NPC
-                                    if npc and item in item_reqs:
-
-                                        # update the delivered items when the item is delivered
-                                        inventory.remove(item)
-                                        npc_item_reqs.remove(item)
-                                        reqs_delivered.append(item)
-
-                                        # updates the flag so the loop can break
-                                        successful_give = True
-                                        if item == 'dog food':
-                                            game_state['given_dog_food'] = True
-                                        if item == 'beer':
-                                            game_state['beer_delivered'] = True
-                                        # quest success dialogue
-                                        if len(npc_item_reqs) == 0:
-                                            print(dialogue[npc_name]['no_more_items'])
-                                        else:
-                                            print(dialogue[npc_name]['one_more_item'])
-                                    # checks to see if the list of required items matches the list of items delivered
-                                    # if it does, it prints a message prompting the user to go to bed (i.e. endgame)
-                                    if len(item_reqs) == len(reqs_delivered):
-                                        game_state['items_delivered'] = True
-                                        time.sleep(3)
-                                        clear()
-                                        # prompt to go to end game
-                                        print('Boy I sure am beat from all that gathering. Time to go to bed.')
-                                        break
-                                    else:
-                                        break
-                            except KeyError:
-                                print(f"{next_noun.capitalize()} isn't here to give {item} to.")
-                                time.sleep(2)
-                                clear()
-                    else:
-                        print(f"You don't have {item}.")
-                        time.sleep(1)
-                        clear()
-    except KeyError:
-        print("There isn't anyone here to give anything to.")
-
-
-def handle_look_around(current_room, rooms):
-    print(rooms[current_room]["description"])
-
-
-def handle_look_obj(noun, current_room, rooms, game_state):
-    try:
-        # Use the game_state dictionary to check if the items have been delivered
-        if noun in rooms[current_room]["object"]:
-            if noun == 'bed':
-                # Check if all items have been delivered using the game_state dictionary
-                if not game_state["items_delivered"]:
-                    print('The bed looks mad comfy but it isn\'t time for sleep yet! '
-                          'I still need to get dad his beer.')
-                else:
-                    print(rooms[current_room]["object"][noun])
-            elif noun in ['cigar case', 'box']:
-                if game_state.get('cigar_case_unlocked', False):
-                    print(rooms[current_room]["object"][noun]['unlocked'])
-                else:
-                    print(rooms[current_room]["object"][noun]['locked'])
-            else:
-                print(rooms[current_room]["object"][noun])
-    except KeyError:
-        print(f"I don't see a {noun} to look at.")
-
-
-def handle_inventory(game_state):
-    inventory = game_state["inventory"]
-
-    # checks if inventory is empty
-    if not inventory:
-        print('You aren\'t carrying anything.')
-    else:
-        print(f'Inventory: {", ".join(inventory)}')
-
-
-"""
-Displays the map image for the current room.
-
-The following function retrieves the map image for the current room and displays it. It first gets the current
-directory using `os.path.dirname(os.path.abspath(__file__))`. Then, it constructs the path to the
-`map_files` directory by joining the current directory with the `map_files` directory name. Next, it
-constructs the path to the image file by joining the `map_files` directory with the name of the
-current room followed by the file extension `.png`. It tries to open the image using the
-`Image.open()` function from the `PIL` library and displays it using the `show()` method. If the map
-image is found, it prints "Pulling out the map." If the map image is not found, it prints a message
-indicating that the map image for the current room was not found.
-
-Parameters:
-None
-
-Returns:
-None
-"""
-
-
-def handle_map():
-    # Get the current directory
-    current_directory = os.path.dirname(os.path.abspath(__file__))
-
-    # Construct the path to the map_files directory
-    map_files_directory = os.path.join(current_directory, 'map_files')
-
-    # Construct the path to the image file
-    image_path = os.path.join(map_files_directory, f'{current_room}.png')
-
-    try:
-        Image.open(image_path).show()
-        print('Pulling out the map.')
-    except FileNotFoundError:
-        print(f"Map image for {current_room} not found.")
-
-
 # prompt()
 print(rooms[current_room]["description"])
 # gameplay loop
@@ -641,20 +317,19 @@ while True:
 
     # this prevents the room descript from printing after every action
     if current_room != previous_room:
-        clear()
+        utility.clear()
         print(rooms[current_room]["description"])
         previous_room = current_room
 
     user_in = input('> ')
 
-    # split input on the first whitespace to separate the verb and the remaining input
+    # splits input on the first whitespace to separate
+    # the verb and the remaining input
     split_input = user_in.strip().split(' ', 1)
 
     # check if there is a verb and noun
     if len(split_input) == 2:
         verb, noun = split_input
-        verb = verb.lower()
-        noun = noun.lower()
     # if there's no whitespace in the input, the user might have only entered a verb
     else:
         verb = user_in.strip().lower()
@@ -664,31 +339,31 @@ while True:
         print("Exiting the game. Goodbye!")
         break
     elif verb.lower() == 'open':
-        handle_open(noun, current_room, rooms, containers)
+        user_action.handle_open(noun, current_room, rooms, containers)
     elif verb.lower() == 'close':
-        handle_close(noun, current_room, rooms, containers)
+        user_action.handle_close(noun, current_room, rooms, containers)
     elif verb.lower() == 'talk':
-        handle_talk(noun, current_room, rooms, dialogue, game_state)
+        speech.handle_talk(noun, current_room, rooms, dialogue, game_state)
     elif verb.lower() == 'take':
-        handle_take(noun, current_room, rooms, game_state)
+        user_action.handle_take(noun, current_room, rooms, game_state)
     elif verb.lower() == 'give':
-        handle_give(noun, current_room, rooms, game_state, npcs, dialogue)
+        user_action.handle_give(noun, current_room, rooms, game_state, npcs, dialogue)
     elif verb.lower() == 'go':
         handle_go(noun, current_room, rooms, game_state)
     elif verb.lower() == 'inventory':
-        handle_inventory(game_state)
+        utility.handle_inventory(game_state)
     elif verb.lower() == 'look':
         if noun == '':
-            handle_look_around(current_room, rooms)
+            user_action.handle_look_around(current_room, rooms)
         else:
-            handle_look_obj(noun, current_room, rooms, game_state)
+            user_action.handle_look_obj(noun, current_room, rooms, game_state)
     elif verb.lower() == 'use':
-        handle_use(noun, current_room, rooms, containers, game_state)
+        user_action.handle_use(noun, current_room, rooms, containers, game_state)
     elif verb.lower() == 'help':
-        handle_help()
+        utility.handle_help()
     elif verb.lower() == 'clear':
-        clear()
+        utility.clear()
     elif verb.lower() == 'map':
-        handle_map()
+        game_navigation.handle_map(current_room)
     else:
         print("I don't understand what you want me to do.")
